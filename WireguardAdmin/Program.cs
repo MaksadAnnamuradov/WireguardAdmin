@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using WireguardAdmin.Models;
 
 namespace WireguardAdmin
 {
@@ -18,7 +20,7 @@ namespace WireguardAdmin
 
             using (var scope = host.Services.CreateScope())
             {
-                var db = scope.ServiceProvider.GetRequiredService<StoreDbContext>();
+                var db = scope.ServiceProvider.GetRequiredService<AdminDBContext>();
                 db.Database.Migrate();
             }
 
