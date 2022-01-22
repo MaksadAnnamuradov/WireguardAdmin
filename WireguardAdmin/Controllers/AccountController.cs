@@ -41,14 +41,17 @@ namespace WireguardAdmin.Controllers
                     ID = Guid.NewGuid().ToString(),
                     Name = loginModel.Name,
                     AllowedIPRange = loginModel.AllowedIPRange,
-                    DateAdded = loginModel.DateAdded,
+                    DateAdded = DateTime.Now,
                     IPAddress = loginModel.IPAddress,
                     ClientPrivateKey = loginModel.ClientPrivateKey,
                     ClientPublicKey = loginModel.ClientPublicKey
                 };
 
                 adminRepository.AddUser(user);
-                return View("Success");
+
+                List<User> users = adminRepository.Users.ToList();
+
+                return View("Success", users);
                 
             }
             ModelState.AddModelError("", "Invalid name or password");

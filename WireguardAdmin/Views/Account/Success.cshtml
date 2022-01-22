@@ -1,5 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Http;
-
+@model IEnumerable<User>
+@{
+    ViewData["Title"] = "Users";
+}
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
@@ -10,6 +13,29 @@
     <h3>Success Page</h3>
     Welcome to Wireguard
     <br>
+
+
+
+    <table class="table table-bordered table-striped table-sm">
+        <thead>
+            <tr><th>Name</th> <th>Date</th> <th>IPAddress</th> <th>AllowedIPRange</th><th>PublicKey</th></tr>
+        </thead>
+        <tbody>
+            @foreach (WireguardAdmin.Models.User user in Model)
+            {
+            <tr>
+
+                <td>@user.Name</td>
+                <td>@user.DateAdded</td>
+                <td>@user.IPAddress</td>
+                <td>@user.AllowedIPRange</td>
+                <td>@user.ClientPublicKey</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+
     <a asp-controller="account" asp-action="logout">Logout</a>
 
 </body>

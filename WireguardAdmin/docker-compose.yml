@@ -1,0 +1,60 @@
+﻿version: "3.7"
+
+networks:
+  dockerapi-dev:
+    driver: bridge #by defult
+
+services:
+    admin:
+        container_name: 'admin'
+        image: admin:latest
+        depends_on:
+          - "admindb"
+        build:
+          context: .
+          dockerfile: Dockerfile
+        #ports:
+          #- "80:80"     
+        environment:
+          ASPNETCORE_ENVIRONMENT: Production
+        networks:
+          - dockerapi-dev  
+    admindb:
+        container_name: 'admindb'
+        image: postgres:latest
+        ports:
+            - "5432:5432"
+        volumes:
+            - admindb_volume:/var/lib/postgresql/data
+            #- ./seed.sql :/docker-entrypoint-initdb.d/seed.sql
+        environment:
+            POSTGRES_USER: "postgres"
+            POSTGRES_PASSWORD: "password"
+        networks:
+            - dockerapi-dev
+    swag:
+        image: ghcr.io/linuxserver/swag
+        container_name: swag
+        cap_add:
+          - NET_ADMIN
+        environment:
+          - PUID=1000
+          - PGID=1000
+          - TZ=America/Denver
+          - URL=admin.maksadannamuradov.com
+          - VALIDATION=http
+          - STAGING=false
+        volumes:
+          - /swag:/config
+          - ./default.conf:/config/nginx/site-confs/default
+        ports:
+          - 443:443
+          - 80:80
+        depends_on:
+          - admindb
+          - admin
+        networks:
+            - dockerapi-dev
+        restart: unless-stopped
+volumes:
+    admindb_volume:

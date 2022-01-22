@@ -22,4 +22,5 @@ RUN dotnet publish "WireguardAdmin.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "WireguardAdmin.dll"]
+
+ENTRYPOINT ["dotnet", "WireguardAdmin.dll", "--urls=http://0.0.0.0:80"]
