@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace WireguardAdmin.Models
 {
     public class User
     {
-        public int ID { get; set; }
+        [Key]
+        public string ID { get; set; }
         public string Name { get; set; }
         public string IPAddress { get; set; }
         public DateTime DateAdded { get; set; }

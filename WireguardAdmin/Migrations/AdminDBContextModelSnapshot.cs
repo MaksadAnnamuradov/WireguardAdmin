@@ -21,10 +21,8 @@ namespace WireguardAdmin.Migrations
 
             modelBuilder.Entity("WireguardAdmin.Models.User", b =>
                 {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .UseIdentityByDefaultColumn();
+                    b.Property<string>("ID")
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedIPRange")
                         .HasColumnType("text");

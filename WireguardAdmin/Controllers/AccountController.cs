@@ -14,10 +14,12 @@ namespace WireguardAdmin.Controllers
     public class AccountController : Controller
     {
         private readonly ILogger<AccountController> _logger;
+        private readonly IAdminRepository adminRepository;
 
-        public AccountController(ILogger<AccountController> logger)
+        public AccountController(ILogger<AccountController> logger, IAdminRepository adminRepository)
         {
             _logger = logger;
+            this.adminRepository = adminRepository;
         }
 
         [Route("")]
@@ -30,37 +32,35 @@ namespace WireguardAdmin.Controllers
 
         [Route("login")]
         [HttpPost]
-        public IActionResult Login(string username, string password)
+        public IActionResult Login(LoginModel loginModel )
         {
-            if (username != null && password != null && username.Equals("acc1") && password.Equals("123"))
+            if (ModelState.IsValid)
             {
-                HttpContext.Session.SetString("username", username);
+                User user = new()
+                {
+                    ID = Guid.NewGuid().ToString(),
+                    Name = loginModel.Name,
+                    AllowedIPRange = loginModel.AllowedIPRange,
+                    DateAdded = loginModel.DateAdded,
+                    IPAddress = loginModel.IPAddress,
+                    ClientPrivateKey = loginModel.ClientPrivateKey,
+                    ClientPublicKey = loginModel.ClientPublicKey
+                };
+
+                adminRepository.AddUser(user);
                 return View("Success");
+                
             }
-            else
-            {
-                ViewBag.error = "Invalid Account";
-                return View("Index");
-            }
+            ModelState.AddModelError("", "Invalid name or password");
+            return View("Index");
+
         }
 
         [Route("logout")]
         [HttpGet]
         public IActionResult Logout()
         {
-            HttpContext.Session.Remove("username");
             return RedirectToAction("Index");
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }

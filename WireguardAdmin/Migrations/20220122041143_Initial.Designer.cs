@@ -10,8 +10,8 @@ using WireguardAdmin.Models;
 namespace WireguardAdmin.Migrations
 {
     [DbContext(typeof(AdminDBContext))]
-    [Migration("20220122031952_initial")]
-    partial class initial
+    [Migration("20220122041143_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,10 +23,8 @@ namespace WireguardAdmin.Migrations
 
             modelBuilder.Entity("WireguardAdmin.Models.User", b =>
                 {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .UseIdentityByDefaultColumn();
+                    b.Property<string>("ID")
+                        .HasColumnType("text");
 
                     b.Property<string>("AllowedIPRange")
                         .HasColumnType("text");
