@@ -43,7 +43,7 @@ services:
           - TZ=America/Denver
           - URL=admin.maksadannamuradov.com
           - VALIDATION=http
-          - STAGING=false
+          - STAGING=true
         volumes:
           - /swag:/config
           - ./default.conf:/config/nginx/site-confs/default
