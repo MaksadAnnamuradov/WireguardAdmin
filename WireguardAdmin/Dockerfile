@@ -19,4 +19,4 @@ WORKDIR /app
 
 COPY --from=build /app/out .
 
-ENTRYPOINT ["dotnet", "WireguardAdmin.dll", "--urls=http://0.0.0.0:80"]
+ENTRYPOINT ["dotnet", "WireguardAdmin.dll", "--urls=http://0.0.0.0:3000"]
