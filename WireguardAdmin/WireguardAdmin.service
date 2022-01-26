@@ -1,11 +1,11 @@
 ﻿[Unit]
 Description=WireguardAdmin
 [Service]
-WorkingDirectory=/var/DotNetApp
-ExecStart=/usr/bin/dotnet /var/DotNetApp/WireguardAdmin.dll
+WorkingDirectory=/var/WireguardAdmin
+ExecStart=/usr/bin/dotnet /var/WireguardAdmin/WireguardAdmin.dll
 Restart=always
 RestartSec=10
-SyslogIdentifier=WireguardAdmin
+SyslogIdentifier=WireguardAdmin-1
 User=root
 Environment=ASPNETCORE_ENVIRONMENT=Production
 [Install]
