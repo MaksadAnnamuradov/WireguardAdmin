@@ -2,8 +2,11 @@
 Description=WireguardAdmin 
 
 [Service]
+WorkingDirectory=/srv/WireguardAdmin
+
 # systemd will run this executable to start the service
-ExecStart=/srv/WireguardAdmin/WireguardAdmin
+ExecStart=/srv/WireguardAdmin/WireguardAdmin.dll
+
 # to query logs using journalctl, set a logical name here
 SyslogIdentifier=WireguardAdmin
 
@@ -13,11 +16,12 @@ SyslogIdentifier=WireguardAdmin
 #       Use 'chmod +x /srv/HelloWorld/HelloWorld' to allow execution of the executable file
 User=root
 Restart=always
-RestartSec=10
+RestartSec=5
 
 # This environment variable is necessary when dotnet isn't loaded for the specified user.
 # To figure out this value, run 'env | grep DOTNET_ROOT' when dotnet has been loaded into your shell.
-Environment=DOTNET_ROOT=/opt/rh/rh-dotnet31/root/usr/lib64/dotnet
+#Environment=DOTNET_ROOT=/opt/rh/rh-dotnet31/root/usr/lib64/dotnet
+
 Environment=ASPNETCORE_ENVIRONMENT=Production
 
 [Install]
