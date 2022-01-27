@@ -65,5 +65,13 @@ namespace WireguardAdmin.Controllers
         {
             return RedirectToAction("Index");
         }
+
+        [Route("runcmd")]
+        [HttpGet]
+        public async Task<int> Runcmd()
+        {
+            var output = await $"./Scripts/wireguardAdmin.sh".Bash(_logger);
+            return output;
+        }
     }
 }

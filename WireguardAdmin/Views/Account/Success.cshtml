@@ -23,20 +23,22 @@
         <tbody>
             @foreach (WireguardAdmin.Models.User user in Model)
             {
-            <tr>
+                <tr>
 
-                <td>@user.Name</td>
-                <td>@user.DateAdded</td>
-                <td>@user.IPAddress</td>
-                <td>@user.AllowedIPRange</td>
-                <td>@user.ClientPublicKey</td>
-            </tr>
+                    <td>@user.Name</td>
+                    <td>@user.DateAdded</td>
+                    <td>@user.IPAddress</td>
+                    <td>@user.AllowedIPRange</td>
+                    <td>@user.ClientPublicKey</td>
+                </tr>
             }
         </tbody>
     </table>
 
 
     <a asp-controller="account" asp-action="logout">Logout</a>
+
+    <a asp-controller="account" asp-action="runcmd">Run command</a>
 
 </body>
 </html>
