@@ -63,11 +63,9 @@ namespace WireguardAdmin.Controllers
 
         }
 
-        [Route("logout")]
-        [HttpGet]
-        public IActionResult Logout()
+        public async Task Restart()
         {
-            return RedirectToAction("Index");
+            var output = await $"sudo systemctl restart wg-quick@wg0.service".Bash();
         }
 
         public async Task<string> Runcmd()
