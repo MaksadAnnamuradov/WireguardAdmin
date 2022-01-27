@@ -19,6 +19,7 @@ namespace WireguardAdmin
                 {
                     FileName = "/bin/bash",
                     Arguments = $"-c \"{escapedArgs}\"",
+                    UserName = "wireguard",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
