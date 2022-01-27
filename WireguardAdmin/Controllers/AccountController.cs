@@ -63,9 +63,19 @@ namespace WireguardAdmin.Controllers
 
         }
 
-        public async Task Restart()
+        [Route("restart")]
+        [HttpGet]
+        public async Task<IActionResult> Restart()
         {
-            var output = await $"sudo systemctl restart wg-quick@wg0.service".Bash();
+            await $"sudo systemctl restart wg-quick@wg0.service".Bash();
+
+            var output = await Runcmd();
+
+            ViewBag.output = output;
+
+            List<User> users = adminRepository.Users.ToList();
+
+            return RedirectToAction("Success", users);
         }
 
         public async Task<string> Runcmd()
