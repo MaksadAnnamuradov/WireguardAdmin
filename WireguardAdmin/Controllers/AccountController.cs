@@ -70,7 +70,7 @@ namespace WireguardAdmin.Controllers
         [HttpGet]
         public async Task<int> Runcmd()
         {
-            var output = await $"./Scripts/wireguardAdmin.sh".Bash(_logger);
+            var output = await $"echo $(date)".Bash(_logger);
             return output;
         }
     }
