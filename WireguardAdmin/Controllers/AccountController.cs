@@ -75,7 +75,7 @@ namespace WireguardAdmin.Controllers
 
             List<User> users = adminRepository.Users.ToList();
 
-            return RedirectToAction("Success", users);
+            return View("Success", users);
         }
 
         public async Task<string> Runcmd()
