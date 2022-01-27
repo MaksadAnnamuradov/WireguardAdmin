@@ -1,0 +1,29 @@
+﻿[Unit]
+Description=WireguardAdmin
+[Service]
+WorkingDirectory=/var/WireguardAdmin
+ExecStart=/var/WireguardAdmin/WireguardAdmin.dll
+Restart=always
+RestartSec=10
+SyslogIdentifier=WireguardAdmin-1
+User=root
+Environment=ASPNETCORE_ENVIRONMENT=Production
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
+#[Unit]
+#Description=Aspnet 5 Web App running on Ubuntu
+#[Service]
+#WorkingDirectory=/var/DotNetApp
+#ExecStart=/usr/bin/dotnet /var/DotNetApp/WireguardAdmin.dll
+#Restart=always
+#RestartSec=10
+#SyslogIdentifier=dotnet-demo
+#User=root
+#Environment=ASPNETCORE_ENVIRONMENT=Production
+#[Install]
+#WantedBy=multi-user.target
