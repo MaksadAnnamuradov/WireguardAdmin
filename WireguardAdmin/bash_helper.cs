@@ -9,10 +9,11 @@ namespace WireguardAdmin
 {
     public static class ShellHelper
     {
-        public static Task<int> Bash(this string cmd, ILogger logger)
+        public static Task<string> Bash(this string cmd, ILogger logger)
         {
             var source = new TaskCompletionSource<int>();
             var escapedArgs = cmd.Replace("\"", "\\\"");
+            var output = "";
             var process = new Process
             {
                 StartInfo = new ProcessStartInfo
@@ -30,9 +31,10 @@ namespace WireguardAdmin
             {
                 logger.LogWarning(process.StandardError.ReadToEnd());
                 logger.LogInformation(process.StandardOutput.ReadToEnd());
+
                 if (process.ExitCode == 0)
                 {
-                    source.SetResult(0);
+                    output = process.StandardOutput.ReadToEnd();
                 }
                 else
                 {
@@ -52,7 +54,7 @@ namespace WireguardAdmin
                 source.SetException(e);
             }
 
-            return source.Task;
+            return Task.FromResult(output);
         }
     }
 }

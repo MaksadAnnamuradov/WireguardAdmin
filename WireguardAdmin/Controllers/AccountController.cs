@@ -32,7 +32,7 @@ namespace WireguardAdmin.Controllers
 
         [Route("login")]
         [HttpPost]
-        public IActionResult Login(LoginModel loginModel )
+        public async Task<IActionResult> Login(LoginModel loginModel )
         {
             if (ModelState.IsValid)
             {
@@ -48,6 +48,10 @@ namespace WireguardAdmin.Controllers
                 };
 
                 adminRepository.AddUser(user);
+
+                var output = await Runcmd();
+
+                ViewBag.output = output;
 
                 List<User> users = adminRepository.Users.ToList();
 
@@ -66,9 +70,7 @@ namespace WireguardAdmin.Controllers
             return RedirectToAction("Index");
         }
 
-        [Route("runcmd")]
-        [HttpGet]
-        public async Task<int> Runcmd()
+        public async Task<string> Runcmd()
         {
             var output = await $"echo $(date)".Bash(_logger);
             return output;
