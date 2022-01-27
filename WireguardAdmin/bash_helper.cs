@@ -9,52 +9,27 @@ namespace WireguardAdmin
 {
     public static class ShellHelper
     {
-        public static Task<string> Bash(this string cmd, ILogger logger)
+        public static Task<string> Bash(this string cmd)
         {
-            var source = new TaskCompletionSource<int>();
             var escapedArgs = cmd.Replace("\"", "\\\"");
-            var output = "";
-            var process = new Process
+
+            var process = new Process()
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "bash",
+                    FileName = "/bin/bash",
                     Arguments = $"-c \"{escapedArgs}\"",
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
-                },
-                EnableRaisingEvents = true
-            };
-            process.Exited += (sender, args) =>
-            {
-                logger.LogWarning(process.StandardError.ReadToEnd());
-                logger.LogInformation(process.StandardOutput.ReadToEnd());
-
-                if (process.ExitCode == 0)
-                {
-                    output = process.StandardOutput.ReadToEnd();
+                    CreateNoWindow = true,
                 }
-                else
-                {
-                    source.SetException(new Exception($"Command `{cmd}` failed with exit code `{process.ExitCode}`"));
-                }
-
-                process.Dispose();
             };
 
-            try
-            {
-                process.Start();
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, "Command {} failed", cmd);
-                source.SetException(e);
-            }
+            process.Start();
+            string result = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
 
-            return Task.FromResult(output);
+            return Task.FromResult(result);
         }
     }
 }

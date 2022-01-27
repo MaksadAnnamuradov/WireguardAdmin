@@ -32,7 +32,7 @@ namespace WireguardAdmin.Controllers
 
         [Route("login")]
         [HttpPost]
-        public async Task<IActionResult> Login(LoginModel loginModel )
+        public async Task<IActionResult> Login(LoginModel loginModel)
         {
             if (ModelState.IsValid)
             {
@@ -56,7 +56,7 @@ namespace WireguardAdmin.Controllers
                 List<User> users = adminRepository.Users.ToList();
 
                 return View("Success", users);
-                
+
             }
             ModelState.AddModelError("", "Invalid name or password");
             return View("Index");
@@ -72,7 +72,7 @@ namespace WireguardAdmin.Controllers
 
         public async Task<string> Runcmd()
         {
-            var output = await $"echo $(date)".Bash(_logger);
+            var output = await $"echo $(date)".Bash();
             return output;
         }
     }
