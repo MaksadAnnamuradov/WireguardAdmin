@@ -72,7 +72,7 @@ namespace WireguardAdmin.Controllers
 
         public async Task<string> Runcmd()
         {
-            var output = await $"echo $(date)".Bash();
+            var output = await $"sudo systemctl status wg-quick@wg0.service".Bash();
             return output;
         }
     }
