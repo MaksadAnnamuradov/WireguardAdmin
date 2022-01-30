@@ -1,18 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
 namespace WireguardAdmin.Models
 {
-    public class LoginModel {
+    public class LoginModel
+    {
+
         [Required]
         public string Name { get; set; }
+
         [Required]
-        public string IPAddress { get; set; }
-        public DateTime DateAdded { get; set; }
-        public string AllowedIPRange { get; set; }
-        [Required]
-        public string ClientPublicKey { get; set; }
-        [Required]
-        public string ClientPrivateKey { get; set; }
+        public string Password { get; set; }
+
+        public string ReturnUrl { get; set; } = "/";
     }
+
 }

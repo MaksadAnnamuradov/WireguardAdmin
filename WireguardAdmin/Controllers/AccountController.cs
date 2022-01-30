@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,29 +12,57 @@ using WireguardAdmin.Models;
 
 namespace WireguardAdmin.Controllers
 {
-    [Route("account")]
     public class AccountController : Controller
     {
         private readonly ILogger<AccountController> _logger;
         private readonly IAdminRepository adminRepository;
+        private readonly IOptions<WireguardAdminOptions> wireguardOptions;
 
-        public AccountController(ILogger<AccountController> logger, IAdminRepository adminRepository)
+        public AccountController(ILogger<AccountController> logger, IAdminRepository adminRepository, IOptions<WireguardAdminOptions> wireguardOptions)
         {
             _logger = logger;
             this.adminRepository = adminRepository;
+            this.wireguardOptions = wireguardOptions;
         }
 
-        [Route("")]
-        [Route("index")]
-        [Route("~/")]
-        public IActionResult Index()
+        
+        public IActionResult Login()
         {
             return View();
         }
 
-        [Route("login")]
         [HttpPost]
-        public async Task<IActionResult> Login(LoginModel loginModel)
+        public IActionResult Login(LoginModel loginModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var username = wireguardOptions.Value.username;
+                var password = wireguardOptions.Value.password;
+
+                if (loginModel.Name == username && loginModel.Password == password)
+                {
+                  /*  var output = await Runcmd();
+
+                    ViewBag.output = output;*/
+
+                    List<User> users = adminRepository.Users.ToList();
+
+                    return View("Success", users);
+                }
+
+            }
+            ModelState.AddModelError("", "Invalid name or password");
+            return View(loginModel);
+        }
+
+        public RedirectResult Logout(string returnUrl = "/")
+        {
+            return Redirect(returnUrl);
+        }
+
+        [Route("newClient")]
+        [HttpPost]
+        public IActionResult AddNewClient(NewClientModel loginModel)
         {
             if (ModelState.IsValid)
             {
@@ -48,19 +78,9 @@ namespace WireguardAdmin.Controllers
                 };
 
                 adminRepository.AddUser(user);
-
-                var output = await Runcmd();
-
-                ViewBag.output = output;
-
-                List<User> users = adminRepository.Users.ToList();
-
-                return View("Success", users);
-
             }
             ModelState.AddModelError("", "Invalid name or password");
             return View("Index");
-
         }
 
         [Route("restart")]
@@ -80,7 +100,7 @@ namespace WireguardAdmin.Controllers
 
         public async Task<string> Runcmd()
         {
-            var output = await $"sudo systemctl status wg-quick@wg0.service".Bash();
+            var output = await $"systemctl status wg-quick@wg0.service".Bash();
             return output;
         }
     }

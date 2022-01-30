@@ -1,4 +1,4 @@
-﻿@model LoginModel
+﻿@model NewClientModel
 @{ Layout = null; }
 <!DOCTYPE html>
 <html>
@@ -15,7 +15,7 @@
     <div class="m-1 p-1">
         <div class="text-danger" asp-validation-summary="All"></div>
 
-        <form asp-action="Login" asp-controller="Account" method="post">
+        <form asp-action="Login" method="post">
             <div class="form-group">
                 <label asp-for="Name"></label>
                 <div asp-validation-for="Name" class="text-danger"></div>

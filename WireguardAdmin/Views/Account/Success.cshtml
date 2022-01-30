@@ -1,8 +1,9 @@
 ﻿@using Microsoft.AspNetCore.Http;
 @model IEnumerable<User>
 @{
-    ViewData["Title"] = "Users";
+    ViewData["Title"] = "Success";
 }
+
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
@@ -15,6 +16,7 @@
     <br>
 
     <a asp-controller="account" asp-action="restart">Restart System</a>
+    <input type="button" value="Some text" onclick="window.location.href='<%= Url.Action(" ", " Account ) %>';" />
 
     <table class="table table-bordered table-striped table-sm">
         <thead>

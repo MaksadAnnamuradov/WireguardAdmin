@@ -30,6 +30,8 @@ namespace WireguardAdmin
             services.AddControllersWithViews();
             services.AddRazorPages();
             services.AddSession();
+
+            services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,10 +56,14 @@ namespace WireguardAdmin
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapRazorPages();
+
                 endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    name: "Default",
+                    pattern: "Account",
+                    defaults: new { controller = "Account", action = "Login" });
             });
+
         }
     }
 }
