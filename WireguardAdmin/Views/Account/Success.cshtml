@@ -15,8 +15,8 @@
     Welcome to Wireguard
     <br>
 
-    <a asp-controller="account" asp-action="restart">Restart System</a>
-    <input type="button" value="Some text" onclick="window.location.href='<%= Url.Action(" ", " Account ) %>';" />
+    <a asp-action="restart">Restart System</a>
+    <a asp-controller="Account" asp-action="AddNewClient">Add New Client</a>
 
     <table class="table table-bordered table-striped table-sm">
         <thead>
@@ -42,7 +42,7 @@
     <pre> @ViewBag.output </pre>
 
 
-    @*    <a asp-controller="account" asp-action="runcmd">Run command</a>*@
+        @*<a asp-controller="account" asp-action="runcmd">Run command</a>*@
 
 </body>
 </html>

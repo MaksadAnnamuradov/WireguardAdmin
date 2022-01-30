@@ -1,10 +1,12 @@
 ﻿@model NewClientModel
-@{ Layout = null; }
+@{
+    ViewData["Title"] = "AddNewClient";
+}
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
-    <title>Index</title>
+    <title>Add New Client</title>
     <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 
@@ -15,7 +17,7 @@
     <div class="m-1 p-1">
         <div class="text-danger" asp-validation-summary="All"></div>
 
-        <form asp-action="Login" method="post">
+        <form asp-action="AddNewClient" method="post">
             <div class="form-group">
                 <label asp-for="Name"></label>
                 <div asp-validation-for="Name" class="text-danger"></div>
@@ -45,42 +47,4 @@
         </form>
     </div>
 </body>
-@*<body>
-
-        <h3>Login Page</h3>
-        @ViewBag.error
-        <form method="post" asp-controller="account" asp-action="login">
-            <table border="0" cellpadding="2" cellspacing="2">
-                <tr>
-                    <td>Name</td>
-                    <td><input type="text" name="Name"></td>
-                </tr>
-                <tr>
-                    <td>IPAddress</td>
-                    <td><input type="text" name="IPAddress"></td>
-                </tr>
-                <tr>
-                    <td>DateAdded</td>
-                    <td><input type="text" name="DateAdded"></td>
-                </tr>
-                <tr>
-                    <td>AllowedIPRange</td>
-                    <td><input type="text" name="AllowedIPRange"></td>
-                </tr>
-                <tr>
-                    <td>ClientPublicKey</td>
-                    <td><input type="password" name="ClientPublicKey"></td>
-                </tr>
-                <tr>
-                    <td>ClientPrivateKey</td>
-                    <td><input type="password" name="ClientPrivateKey"></td>
-                </tr>
-                <tr>
-                    <td>&nbsp;</td>
-                    <td><input type="submit" value="Add Client"></td>
-                </tr>
-            </table>
-        </form>
-
-    </body>*@
 </html>

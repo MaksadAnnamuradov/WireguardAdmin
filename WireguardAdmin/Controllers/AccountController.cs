@@ -41,9 +41,9 @@ namespace WireguardAdmin.Controllers
 
                 if (loginModel.Name == username && loginModel.Password == password)
                 {
-                  /*  var output = await Runcmd();
+                    /* var output = await Runcmd();
 
-                    ViewBag.output = output;*/
+                     ViewBag.output = output;*/
 
                     List<User> users = adminRepository.Users.ToList();
 
@@ -60,24 +60,39 @@ namespace WireguardAdmin.Controllers
             return Redirect(returnUrl);
         }
 
-        [Route("newClient")]
+        [Route("addnewclient")]
+        [HttpGet]
+        public IActionResult AddNewClient()
+        {
+            return View();
+        }
+
+        [Route("addnewclient")]
         [HttpPost]
-        public IActionResult AddNewClient(NewClientModel loginModel)
+        public IActionResult AddNewClient(NewClientModel newClient)
         {
             if (ModelState.IsValid)
             {
                 User user = new()
                 {
                     ID = Guid.NewGuid().ToString(),
-                    Name = loginModel.Name,
-                    AllowedIPRange = loginModel.AllowedIPRange,
+                    Name = newClient.Name,
+                    AllowedIPRange = newClient.AllowedIPRange,
                     DateAdded = DateTime.Now,
-                    IPAddress = loginModel.IPAddress,
-                    ClientPrivateKey = loginModel.ClientPrivateKey,
-                    ClientPublicKey = loginModel.ClientPublicKey
+                    IPAddress = newClient.IPAddress,
+                    ClientPrivateKey = newClient.ClientPrivateKey,
+                    ClientPublicKey = newClient.ClientPublicKey
                 };
 
                 adminRepository.AddUser(user);
+
+                /* var output = await Runcmd();
+
+                    ViewBag.output = output;*/
+
+                List<User> users = adminRepository.Users.ToList();
+
+                return View("Success", users);
             }
             ModelState.AddModelError("", "Invalid name or password");
             return View("Index");
