@@ -69,7 +69,7 @@ namespace WireguardAdmin.Controllers
 
         [Route("addnewclient")]
         [HttpPost]
-        public IActionResult AddNewClient(NewClientModel newClient)
+        public async Task<IActionResult> AddNewClient(NewClientModel newClient)
         {
             if (ModelState.IsValid)
             {
@@ -77,18 +77,18 @@ namespace WireguardAdmin.Controllers
                 {
                     ID = Guid.NewGuid().ToString(),
                     Name = newClient.Name,
-                    AllowedIPRange = newClient.AllowedIPRange,
                     DateAdded = DateTime.Now,
                     IPAddress = newClient.IPAddress,
-                    ClientPrivateKey = newClient.ClientPrivateKey,
-                    ClientPublicKey = newClient.ClientPublicKey
                 };
 
                 adminRepository.AddUser(user);
 
-                /* var output = await Runcmd();
+                var output = await Runcmd();
 
-                    ViewBag.output = output;*/
+                await GenereateNewClientConf(newClient);
+                await UpdateServerFile(newClient);
+
+                ViewBag.output = output;
 
                 List<User> users = adminRepository.Users.ToList();
 
@@ -96,6 +96,25 @@ namespace WireguardAdmin.Controllers
             }
             ModelState.AddModelError("", "Invalid name or password");
             return View("Index");
+        }
+
+        public async Task GenereateNewClientConf(NewClientModel newClient)
+        {
+            string name = newClient.Name;
+
+            await $@"umask 077 && cd wireguard && mkdir {name} && cd {name} &&  wg genkey > {name}.key &&  wg pubkey<{name}.key > {name}.pub".Bash();
+
+            await $@"echo ""[Interface]"" >> {name}.conf && echo ""PublicKey = $(cat {name}.pub)"" >> {name}.conf &&  echo ""PrivateKey = $(cat {name}.key)"" >> {name}.conf && echo ""Address = {newClient.IPAddress}"" >> {name}.conf && echo ""DNS = 8.8.8.8"" >> {name}.conf".Bash();
+
+            await $@"echo ""[Peer]"" >> {name}.conf && echo ""AllowedIPs = 10.254.0.0/24"" >> {name}.conf && echo ""Endpoint = 74.207.244.207:51820"" >> {name}.conf && echo ""AllowedIPs = 0.0.0.0/0"" >> {name}.conf".Bash();
+
+        }
+
+        public async Task UpdateServerFile(NewClientModel newClient)
+        {
+            string name = newClient.Name;
+
+            await $@"cd /etc/wireguard && echo ""[Peer]"" >> wg0.conf && echo ""AllowedIPs = {newClient.IPAddress}"" >> wg0.conf && echo ""PublicKey = $(cat $HOME/wireguard/{name}/{name}.pub)"" >> wg0.conf".Bash();
         }
 
         [Route("restart")]
