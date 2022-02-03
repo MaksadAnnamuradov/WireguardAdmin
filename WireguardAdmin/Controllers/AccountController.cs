@@ -83,12 +83,12 @@ namespace WireguardAdmin.Controllers
 
                 adminRepository.AddUser(user);
 
-                var output = await Runcmd();
+               /* var output = await Runcmd();
 
                 await GenereateNewClientConf(newClient);
                 await UpdateServerFile(newClient);
 
-                ViewBag.output = output;
+                ViewBag.output = output;*/
 
                 List<User> users = adminRepository.Users.ToList();
 
