@@ -33,7 +33,7 @@ namespace WireguardAdmin.Controllers
 
         [HttpPost]
         [Route("/")]
-        public IActionResult Login(LoginModel loginModel)
+        public async Task<IActionResult> Login(LoginModel loginModel)
         {
             if (ModelState.IsValid)
             {
@@ -42,9 +42,9 @@ namespace WireguardAdmin.Controllers
 
                 if (loginModel.Name == username && loginModel.Password == password)
                 {
-                    /* var output = await Runcmd();
+                    var output = await getStatus();
 
-                     ViewBag.output = output;*/
+                    ViewBag.output = output;
 
                     List<User> users = adminRepository.Users.ToList();
 
@@ -86,7 +86,7 @@ namespace WireguardAdmin.Controllers
 
                 adminRepository.AddUser(user);
 
-                var output = await Runcmd();
+                var output = await getStatus();
 
                 await GenereateNewClientConf(newClient);
                 await UpdateServerFile(newClient);
@@ -126,7 +126,7 @@ namespace WireguardAdmin.Controllers
         {
             await $"sudo systemctl restart wg-quick@wg0.service".Bash();
 
-            var output = await Runcmd();
+            var output = await getStatus();
 
             ViewBag.output = output;
 
@@ -135,7 +135,7 @@ namespace WireguardAdmin.Controllers
             return View("Success", users);
         }
 
-        public async Task<string> Runcmd()
+        public async Task<string> getStatus()
         {
             var output = await $"systemctl status wg-quick@wg0.service".Bash();
             return output;
