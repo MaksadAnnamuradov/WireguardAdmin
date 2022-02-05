@@ -25,13 +25,14 @@ namespace WireguardAdmin.Controllers
             this.wireguardOptions = wireguardOptions;
         }
 
-        
+        [Route("/")]
         public IActionResult Login()
         {
             return View();
         }
 
         [HttpPost]
+        [Route("/")]
         public IActionResult Login(LoginModel loginModel)
         {
             if (ModelState.IsValid)
@@ -54,6 +55,8 @@ namespace WireguardAdmin.Controllers
             ModelState.AddModelError("", "Invalid name or password");
             return View(loginModel);
         }
+
+
 
         public RedirectResult Logout(string returnUrl = "/")
         {
