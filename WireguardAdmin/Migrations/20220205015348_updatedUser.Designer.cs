@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WireguardAdmin.Models;
@@ -9,9 +10,10 @@ using WireguardAdmin.Models;
 namespace WireguardAdmin.Migrations
 {
     [DbContext(typeof(AdminDBContext))]
-    partial class AdminDBContextModelSnapshot : ModelSnapshot
+    [Migration("20220205015348_updatedUser")]
+    partial class updatedUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

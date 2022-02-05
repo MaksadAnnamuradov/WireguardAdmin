@@ -14,6 +14,7 @@ namespace WireguardAdmin.Models
         public string AllowedIPRange { get; set; }
         public string ClientPublicKey { get; set; }
         public string ClientPrivateKey { get; set; }
+        public string ClientConfigFile { get; set; }
     }
 }
 
