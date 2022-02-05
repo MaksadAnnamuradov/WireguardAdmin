@@ -89,7 +89,7 @@ namespace WireguardAdmin.Controllers
                 var output = await getStatus();
 
                 await GenereateNewClientConf(newClient);
-               /* await UpdateServerFile(newClient);*/
+                await UpdateServerFile(newClient);
 
                 ViewBag.output = output;
 
