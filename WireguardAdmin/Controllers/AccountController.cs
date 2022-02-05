@@ -105,7 +105,7 @@ namespace WireguardAdmin.Controllers
         {
             string name = newClient.Name;
 
-            await $@"umask 077 && cd wireguard && mkdir {name} && cd {name} &&  wg genkey > {name}.key &&  wg pubkey<{name}.key > {name}.pub".Bash();
+            await $"umask 077 && cd wireguard && mkdir {name} && cd {name} &&  wg genkey > {name}.key &&  wg pubkey<{name}.key > {name}.pub".Bash();
 
         /*    await $@"echo ""[Interface]"" >> {name}.conf && echo ""PublicKey = $(cat {name}.pub)"" >> {name}.conf &&  echo ""PrivateKey = $(cat {name}.key)"" >> {name}.conf && echo ""Address = {newClient.IPAddress}"" >> {name}.conf && echo ""DNS = 8.8.8.8"" >> {name}.conf".Bash();
 
