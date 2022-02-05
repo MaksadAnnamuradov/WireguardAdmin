@@ -1,0 +1,21 @@
+name: "deploy"
+
+on: 
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+        with: 
+          fetch-depth: 100
+
+      - name: build
+        run: |
+          cd WireguardAdmin
+          docker-compose up --build -d
