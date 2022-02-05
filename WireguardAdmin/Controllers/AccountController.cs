@@ -124,7 +124,8 @@ namespace WireguardAdmin.Controllers
 
             await $@"cd /etc/wireguard && echo ""[Peer]"" >> wg0.conf &&
                   echo ""AllowedIPs = {newClient.IPAddress}"" >> wg0.conf &&
-                  echo ""PublicKey = $(cat $HOME/wireguard/{name}/{name}.pub)"" >> wg0.conf".Bash();
+                  echo ""PublicKey = $(cat $HOME/wireguard/{name}/{name}.pub)"" >> wg0.conf && 
+                  sudo systemctl restart wg-quick@wg0.service".Bash();
         }
 
         [Route("restart")]
