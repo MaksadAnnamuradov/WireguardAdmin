@@ -17,5 +17,6 @@ jobs:
 
       - name: build
         run: |
+          git secret reveal
           cd WireguardAdmin
           docker-compose up --build -d
