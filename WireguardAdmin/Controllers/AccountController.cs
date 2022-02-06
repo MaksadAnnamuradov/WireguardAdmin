@@ -54,7 +54,7 @@ namespace WireguardAdmin.Controllers
 
         public async Task<IActionResult> Success()
         {
-            List<User> users = adminRepository.Users.ToList();
+            List<User> users = await adminRepository.GetAllUsers();
 
             var output = await getStatus();
 
