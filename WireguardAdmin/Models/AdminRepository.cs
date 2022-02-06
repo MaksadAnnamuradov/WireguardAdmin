@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace WireguardAdmin.Models
 {
@@ -9,17 +12,21 @@ namespace WireguardAdmin.Models
         {
             context = ctx;
         }
-        public IQueryable<User> Users => context.Users;
 
-        public void AddUser(User p)
+        public async void AddUser(User p)
         {
-            context.Add(p);
-            context.SaveChanges();
+            await context.AddAsync(p);
+            await context.SaveChangesAsync();
         }
-        public void DeleteUser(User p)
+        public async void DeleteUser(User p)
         {
-            context.Remove(p);
-            context.SaveChanges();
+           context.Users.Remove(p);
+           await context.SaveChangesAsync();
+        }
+
+        public async Task<List<User>> GetAllUsers()
+        {
+            return await context.Users.ToListAsync();
         }
     }
 }

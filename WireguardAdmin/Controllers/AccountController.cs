@@ -45,21 +45,21 @@ namespace WireguardAdmin.Controllers
 
                 if (loginModel.Name == username && loginModel.Password == password)
                 {
-                    /* var output = await getStatus();
-
-                     ViewBag.output = output;*/
-
-                    return RedirectToAction("Success"); // View("Success", users);
+                    return RedirectToAction("Success");
                 }
-
             }
             ModelState.AddModelError("", "Invalid name or password");
             return View(loginModel);
         }
 
-        public IActionResult Success()
+        public async Task<IActionResult> Success()
         {
             List<User> users = adminRepository.Users.ToList();
+
+            var output = await getStatus();
+
+            ViewBag.output = output;
+
             return View(users);
         }
 
@@ -79,6 +79,9 @@ namespace WireguardAdmin.Controllers
         {
             if (ModelState.IsValid)
             {
+                await GenereateNewClientConf(newClient);
+                await UpdateServerFile(newClient);
+
                 User user = new()
                 {
                     ID = Guid.NewGuid().ToString(),
@@ -88,13 +91,6 @@ namespace WireguardAdmin.Controllers
                 };
 
                 adminRepository.AddUser(user);
-
-              /*  var output = await getStatus();
-
-                await GenereateNewClientConf(newClient);
-                await UpdateServerFile(newClient);
-
-                ViewBag.output = output;*/
 
                 return RedirectToAction("Success");
             }
@@ -135,12 +131,6 @@ namespace WireguardAdmin.Controllers
         public async Task<IActionResult> Restart()
         {
             await $"sudo systemctl restart wg-quick@wg0.service".Bash();
-
-            var output = await getStatus();
-
-            ViewBag.output = "Restarted";
-
-
             return RedirectToAction("Success");
         }
 
