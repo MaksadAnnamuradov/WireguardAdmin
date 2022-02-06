@@ -118,12 +118,12 @@ namespace WireguardAdmin.Controllers
 
         public async Task<string> GetClientPublicKey(string clientName)
         {
-            return await $"cat /home/wireguard/{clientName}/{clientName}/{clientName}.pub".Bash();
+            return await $"cat /home/wireguard/{clientName}/{clientName}.pub".Bash();
         }
 
         public async Task<string> GetClientPrivateKey(string clientName)
         {
-            return await $"cat /home/wireguard/{clientName}/{clientName}/{clientName}.key".Bash();
+            return await $"cat /home/wireguard/{clientName}/{clientName}.key".Bash();
         }
 
         public async Task UpdateServerFile(NewClientModel newClient)
