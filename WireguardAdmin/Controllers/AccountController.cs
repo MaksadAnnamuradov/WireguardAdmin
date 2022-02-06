@@ -116,11 +116,21 @@ namespace WireguardAdmin.Controllers
                   echo ""AllowedIPs = 0.0.0.0/0"" >> {name}.conf".Bash();
         }
 
+        public async Task<string> GetClientPublicKey(string clientName)
+        {
+            return await $"cat /home/wireguard/{clientName}/{clientName}/{clientName}.pub".Bash();
+        }
+
+        public async Task<string> GetClientPrivateKey(string clientName)
+        {
+            return await $"cat /home/wireguard/{clientName}/{clientName}/{clientName}.key".Bash();
+        }
+
         public async Task UpdateServerFile(NewClientModel newClient)
         {
             string name = newClient.Name;
 
-            await $@"sudo wg set wg0 peer $(cat $HOME/wireguard/{name}/{name}.pub) allowed-ips {newClient.IPAddress} &&
+            await $@"sudo wg set wg0 peer $(cat home/wireguard/{name}/{name}.pub) allowed-ips {newClient.IPAddress} &&
                   sudo systemctl restart wg-quick@wg0.service".Bash();
         }
 
