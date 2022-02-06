@@ -26,13 +26,16 @@ namespace WireguardAdmin.Controllers
         }
 
         [Route("/")]
+        public IActionResult Account()
+        {
+            return RedirectToAction("Login");
+        }
         public IActionResult Login()
         {
             return View();
         }
 
         [HttpPost]
-        [Route("/")]
         public async Task<IActionResult> Login(LoginModel loginModel)
         {
             if (ModelState.IsValid)
@@ -42,13 +45,11 @@ namespace WireguardAdmin.Controllers
 
                 if (loginModel.Name == username && loginModel.Password == password)
                 {
-                    var output = await getStatus();
+                    /* var output = await getStatus();
 
-                    ViewBag.output = output;
+                     ViewBag.output = output;*/
 
-                    List<User> users = adminRepository.Users.ToList();
-
-                    return View("Success", users);
+                    return RedirectToAction("Success"); // View("Success", users);
                 }
 
             }
@@ -56,21 +57,23 @@ namespace WireguardAdmin.Controllers
             return View(loginModel);
         }
 
-
+        public IActionResult Success()
+        {
+            List<User> users = adminRepository.Users.ToList();
+            return View(users);
+        }
 
         public RedirectResult Logout(string returnUrl = "/")
         {
             return Redirect(returnUrl);
         }
 
-        [Route("addnewclient")]
         [HttpGet]
         public IActionResult AddNewClient()
         {
             return View();
         }
 
-        [Route("addnewclient")]
         [HttpPost]
         public async Task<IActionResult> AddNewClient(NewClientModel newClient)
         {
@@ -86,17 +89,16 @@ namespace WireguardAdmin.Controllers
 
                 adminRepository.AddUser(user);
 
-                var output = await getStatus();
+              /*  var output = await getStatus();
 
                 await GenereateNewClientConf(newClient);
                 await UpdateServerFile(newClient);
 
-                ViewBag.output = output;
+                ViewBag.output = output;*/
 
-                List<User> users = adminRepository.Users.ToList();
-
-                return View("Success", users);
+                return RedirectToAction("Success");
             }
+
             ModelState.AddModelError("", "Invalid name or password");
             return View("Index");
         }
@@ -129,7 +131,6 @@ namespace WireguardAdmin.Controllers
                   sudo systemctl start wg-quick@wg0.service".Bash();
         }
 
-        [Route("restart")]
         [HttpGet]
         public async Task<IActionResult> Restart()
         {
@@ -137,11 +138,10 @@ namespace WireguardAdmin.Controllers
 
             var output = await getStatus();
 
-            ViewBag.output = output;
+            ViewBag.output = "Restarted";
 
-            List<User> users = adminRepository.Users.ToList();
 
-            return View("Success", users);
+            return RedirectToAction("Success");
         }
 
         public async Task<string> getStatus()

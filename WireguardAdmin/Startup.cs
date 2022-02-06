@@ -60,8 +60,23 @@ namespace WireguardAdmin
 
                 endpoints.MapControllerRoute(
                     name: "Default",
-                    pattern: "Account",
+                    pattern: "Login",
                     defaults: new { controller = "Account", action = "Login" });
+
+                endpoints.MapControllerRoute(
+                 name: "Success",
+                 pattern: "Success",
+                 defaults: new { controller = "Account", action = "Success" });
+
+                endpoints.MapControllerRoute(
+                 name: "AddNewClient",
+                 pattern: "AddNewClient",
+                 defaults: new { controller = "Account", action = "AddNewClient" });
+
+              /*  endpoints.MapControllerRoute(
+                 name: "Login",
+                 pattern: "Login",
+                 defaults: new { controller = "Account", action = "Login" });*/
             });
 
         }
