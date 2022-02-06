@@ -130,7 +130,7 @@ namespace WireguardAdmin.Controllers
         {
             string name = newClient.Name;
 
-            await $@"sudo wg set wg0 peer $(cat home/wireguard/{name}/{name}.pub) allowed-ips {newClient.IPAddress} &&
+            await $@"sudo wg set wg0 peer $(cat /home/wireguard/{name}/{name}.pub) allowed-ips {newClient.IPAddress} &&
                   sudo systemctl restart wg-quick@wg0.service".Bash();
         }
 
