@@ -20,8 +20,8 @@ namespace WireguardAdmin.Models
         }
         public async void DeleteUser(User p)
         {
-           context.Users.Remove(p);
-           await context.SaveChangesAsync();
+            context.Users.Remove(p);
+            await context.SaveChangesAsync();
         }
 
         public async Task<List<User>> GetAllUsers()

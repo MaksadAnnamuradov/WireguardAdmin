@@ -1,12 +1,12 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace WireguardAdmin.Models
 {
     public interface IAdminRepository
     {
-        IQueryable<User> Users { get; }
-
         void AddUser(User p);
         void DeleteUser(User p);
+        Task<List<User>> GetAllUsers();
     }
 }
