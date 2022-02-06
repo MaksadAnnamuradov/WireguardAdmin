@@ -36,7 +36,7 @@ namespace WireguardAdmin.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginModel loginModel)
+        public IActionResult Login(LoginModel loginModel)
         {
             if (ModelState.IsValid)
             {
@@ -120,17 +120,17 @@ namespace WireguardAdmin.Controllers
         {
             string name = newClient.Name;
 
-            await $@"sudo systemctl stop wg-quick@wg0.service &&
+            await $@"systemctl stop wg-quick@wg0.service &&
                   cd /etc/wireguard && echo ""[Peer]"" >> wg0.conf &&
                   echo ""AllowedIPs = {newClient.IPAddress}"" >> wg0.conf &&
                   echo ""PublicKey = $(cat $HOME/wireguard/{name}/{name}.pub)"" >> wg0.conf &&
-                  sudo systemctl start wg-quick@wg0.service".Bash();
+                  systemctl start wg-quick@wg0.service".Bash();
         }
 
         [HttpGet]
         public async Task<IActionResult> Restart()
         {
-            await $"sudo systemctl restart wg-quick@wg0.service".Bash();
+            await $"systemctl restart wg-quick@wg0.service".Bash();
             return RedirectToAction("Success");
         }
 

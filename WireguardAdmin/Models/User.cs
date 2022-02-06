@@ -18,9 +18,12 @@ namespace WireguardAdmin.Models
     }
 }
 
-/*Client Name
-IP address
-Date Added
-Allowed IP Range
-Client public key
-Client private key*/
+/*[Interface]
+PrivateKey = 4OvR9caAIy0AjGy8zl + J / bc6JC / zk3o7p8fA25 / WIWs =
+Address = 10.200.0.2 / 32
+DNS = 8.8.8.8
+
+[Peer]
+PublicKey = ys2zO7pf2j + sRCe1 + O59Rsf + MO31qNOSjGXlY +/ yTWw =
+AllowedIPs = 0.0.0.0 / 0
+Endpoint = 74.207.244.207:51820*/
