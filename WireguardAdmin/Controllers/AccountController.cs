@@ -120,10 +120,7 @@ namespace WireguardAdmin.Controllers
         {
             string name = newClient.Name;
 
-            await $@"
-                  cd /etc/wireguard && echo ""[Peer]"" >> wg0.conf &&
-                  echo ""AllowedIPs = {newClient.IPAddress}"" >> wg0.conf &&
-                  echo ""PublicKey = $(cat $HOME/wireguard/{name}/{name}.pub)"" >> wg0.conf &&
+            await $@"sudo wg set wg0 peer $(cat $HOME/wireguard/{name}/{name}.pub) allowed-ips {newClient.IPAddress} &&
                   sudo systemctl restart wg-quick@wg0.service".Bash();
         }
 
