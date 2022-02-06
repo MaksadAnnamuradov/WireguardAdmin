@@ -120,17 +120,17 @@ namespace WireguardAdmin.Controllers
         {
             string name = newClient.Name;
 
-            await $@"systemctl stop wg-quick@wg0.service &&
+            await $@"
                   cd /etc/wireguard && echo ""[Peer]"" >> wg0.conf &&
                   echo ""AllowedIPs = {newClient.IPAddress}"" >> wg0.conf &&
                   echo ""PublicKey = $(cat $HOME/wireguard/{name}/{name}.pub)"" >> wg0.conf &&
-                  systemctl start wg-quick@wg0.service".Bash();
+                  sudo systemctl restart wg-quick@wg0.service".Bash();
         }
 
         [HttpGet]
         public async Task<IActionResult> Restart()
         {
-            await $"systemctl restart wg-quick@wg0.service".Bash();
+            await $"sudo systemctl restart wg-quick@wg0.service".Bash();
             return RedirectToAction("Success");
         }
 
