@@ -18,7 +18,7 @@ namespace WireguardAdmin
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "/bin/bash",
-                    Arguments = cmd,
+                    Arguments = $"-c \"{cmd}\"",
                     UserName = "wireguard",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
