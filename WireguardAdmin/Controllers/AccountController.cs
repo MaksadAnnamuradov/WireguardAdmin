@@ -132,7 +132,7 @@ namespace WireguardAdmin.Controllers
 
             string clientKey = await GetClientPublicKey(name);
 
-            await $"sudo wg set wg0 peer {clientKey} allowed-ips {newClient.IPAddress};".Bash();
+            await $"sudo wg set wg0 peer {clientKey} allowed-ips 144.4.55.20;".Bash();
             await "sudo systemctl restart wg-quick@wg0.service".Bash();
         }
 
