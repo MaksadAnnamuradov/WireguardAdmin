@@ -2,7 +2,7 @@
 Description=WireguardAdmin
 [Service]
 WorkingDirectory=/var/WireguardAdmin
-ExecStart=/var/WireguardAdmin/WireguardAdmin.dll
+ExecStart=/usr/bin/dotnet /var/WireguardAdmin/WireguardAdmin.dll
 Restart=always
 RestartSec=10
 SyslogIdentifier=WireguardAdmin-1
