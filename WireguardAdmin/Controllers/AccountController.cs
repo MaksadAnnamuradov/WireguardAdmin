@@ -56,7 +56,7 @@ namespace WireguardAdmin.Controllers
         {
             List<User> users = await adminRepository.GetAllUsers();
 
-            var output = getStatus();
+            var output = await getStatus();
 
             ViewBag.output = output;
 
@@ -75,12 +75,12 @@ namespace WireguardAdmin.Controllers
         }
 
         [HttpPost]
-        public IActionResult AddNewClient(NewClientModel newClient)
+        public async Task<IActionResult> AddNewClient(NewClientModel newClient)
         {
             if (ModelState.IsValid)
             {
-                 GenereateNewClientConf(newClient);
-                 UpdateServerFile(newClient);
+                await GenereateNewClientConf(newClient);
+                await UpdateServerFile(newClient);
 
                 User user = new()
                 {
@@ -99,79 +99,54 @@ namespace WireguardAdmin.Controllers
             return View("Index");
         }
 
-        public void GenereateNewClientConf(NewClientModel newClient)
+        public async Task GenereateNewClientConf(NewClientModel newClient)
         {
             string name = newClient.Name;
 
-            var output = RunCommand($@"umask 077 && cd /home/wireguard/wireguard && mkdir {name} && cd {name} &&
-                                      wg genkey > {name}.key &&  wg pubkey<{name}.key > {name}.pub &&
-                                      echo ""[Interface]"" >> {name}.conf &&
-                                      echo ""PublicKey = $(cat {name}.pub)"" >> {name}.conf &&
-                                      echo ""PrivateKey = $(cat {name}.key)"" >> {name}.conf && 
-                                      echo ""Address = {newClient.IPAddress}"" >> {name}.conf &&
-                                      echo ""DNS = 8.8.8.8"" >> {name}.conf &&
-                                      echo ""[Peer]"" >> {name}.conf &&
-                                      echo ""AllowedIPs = 10.254.0.0/24"" >> {name}.conf &&
-                                      echo ""Endpoint = 74.207.244.207:51820"" >> {name}.conf &&
-                                      echo ""AllowedIPs = 0.0.0.0/0"" >> {name}.conf");
+            await $@"umask 077 && cd /home/wireguard/wireguard && mkdir {name} && cd {name} &&
+                  wg genkey > {name}.key &&  wg pubkey<{name}.key > {name}.pub &&
+                  echo ""[Interface]"" >> {name}.conf &&
+                  echo ""PublicKey = $(cat {name}.pub)"" >> {name}.conf &&
+                  echo ""PrivateKey = $(cat {name}.key)"" >> {name}.conf && 
+                  echo ""Address = {newClient.IPAddress}"" >> {name}.conf &&
+                  echo ""DNS = 8.8.8.8"" >> {name}.conf &&
+                  echo ""[Peer]"" >> {name}.conf &&
+                  echo ""AllowedIPs = 10.254.0.0/24"" >> {name}.conf &&
+                  echo ""Endpoint = 74.207.244.207:51820"" >> {name}.conf &&
+                  echo ""AllowedIPs = 0.0.0.0/0"" >> {name}.conf".Bash();
         }
 
-        public string GetClientPublicKey(string clientName)
+        public async Task<string> GetClientPublicKey(string clientName)
         {
-            return RunCommand($"cat /home/wireguard/wireguard/{clientName}/{clientName}.pub");
+            return await $"cat /home/wireguard/wireguard/{clientName}/{clientName}.pub".Bash();
         }
 
-        public string GetClientPrivateKey(string clientName)
+        public async Task<string> GetClientPrivateKey(string clientName)
         {
-            return RunCommand($"cat /home/wireguard/wireguard/{clientName}/{clientName}.key");
+            return await $"cat /home/wireguard/wireguard/{clientName}/{clientName}.key".Bash();
         }
 
-        public void UpdateServerFile(NewClientModel newClient)
+        public async Task UpdateServerFile(NewClientModel newClient)
         {
             string name = newClient.Name;
 
-            string clientKey = GetClientPublicKey(name);
+            string clientKey = await GetClientPublicKey(name);
 
-            RunCommand($@"sudo wg set wg0 peer{clientKey} allowed-ips {newClient.IPAddress} &&
-                   sudo systemctl restart wg-quick@wg0.service");
+            await $@"sudo wg set wg0 peer {clientKey} allowed-ips {newClient.IPAddress} &&
+                   sudo systemctl restart wg-quick@wg0.service".Bash();
         }
 
         [HttpGet]
-        public IActionResult Restart()
+        public async Task<IActionResult> Restart()
         {
-            RunCommand($"sudo systemctl restart wg-quick@wg0.service");
+            await $"sudo systemctl restart wg-quick@wg0.service".Bash();
             return RedirectToAction("Success");
         }
 
-        public string getStatus()
+        public async Task<string> getStatus()
         {
-            var output = RunCommand($"systemctl status wg-quick@wg0.service");
+            var output = await $"systemctl status wg-quick@wg0.service".Bash();
             return output;
         }
-
-        string RunCommand(string command)
-        {
-            var process = new Process()
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "bash",
-                    Arguments = $"-c \"{command}\"",
-                    UserName = "wireguard",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
-            process.Start();
-            string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
-            process.WaitForExit();
-
-            if (string.IsNullOrEmpty(error)) { return output; }
-            else { return error; }
-        }
-
     }
 }
