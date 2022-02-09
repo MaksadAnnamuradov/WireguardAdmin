@@ -11,14 +11,14 @@ namespace WireguardAdmin
     {
         public static Task<string> Bash(this string cmd)
         {
-            //var escapedArgs = cmd.Replace("\"", "\\\"");
+            var escapedArgs = cmd.Replace("\"", "\\\"");
 
             var process = new Process()
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = cmd,
-                    //Arguments = $"-c \"{cmd}\"",
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"{escapedArgs}\"",
                     UserName = "wireguard",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
