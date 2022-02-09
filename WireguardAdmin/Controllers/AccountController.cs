@@ -137,7 +137,7 @@ namespace WireguardAdmin.Controllers
                   cd /etc/wireguard && echo ""[Peer]"" >> wg0.conf &&
                   echo ""AllowedIPs = {newClient.IPAddress}"" >> wg0.conf &&
                   echo ""PublicKey = {clientKey}"" >> wg0.conf &&
-                  sudo systemctl restart wg-quick@wg0.service".Bash();
+                  sudo systemctl start wg-quick@wg0.service".Bash();
 
 
            /* await $"sudo wg set wg0 peer {clientKey} allowed-ips {newClient.IPAddress};".Bash();
