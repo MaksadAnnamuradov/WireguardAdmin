@@ -133,7 +133,7 @@ namespace WireguardAdmin.Controllers
             string clientKey = await GetClientPublicKey(name);
 
             await $@"
-                  sudo systemctl stop wg-quick@wg0.service
+                  sudo systemctl stop wg-quick@wg0.service &&
                   cd /etc/wireguard && echo ""[Peer]"" >> wg0.conf &&
                   echo ""AllowedIPs = {newClient.IPAddress}"" >> wg0.conf &&
                   echo ""PublicKey = {clientKey}"" >> wg0.conf &&
