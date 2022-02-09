@@ -19,7 +19,7 @@ namespace WireguardAdmin
                 {
                     FileName = "bash",
                     Arguments = $"-c \"{cmd}\"",
-                    UserName = "wireguard",
+                    UserName = "root",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
