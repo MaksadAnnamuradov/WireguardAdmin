@@ -1,4 +1,4 @@
-name: "db_backup"
+name: "dump-db"
 
 on:
   schedule:
@@ -7,9 +7,9 @@ on:
 jobs:
   build: 
     name: db_backup
-    runs-on: [self-hosted, db_backup]
+    runs-on: [self-hosted, dump-db]
     steps: 
-      - name: backup
+      - name: dump-db
         run: |
          rm /home/git/backups/*
          cd /home/git/backups
