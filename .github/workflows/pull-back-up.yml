@@ -1,0 +1,16 @@
+name: "pull_backup"
+
+on:
+  schedule: 
+    - cron: "0 1 * * *" 
+
+jobs: 
+  build:
+    runs-on: self-hosted
+    steps: 
+      - name: backup-pull
+        run: 
+          sudo wg-quick up rustyvpn
+          file_to_copy =`ssh`
+          sudo scp root@74.207.244.207:/home/git/'ls -t /home/git/ | head -l' /home/git
+          sudo wg-quick down rustyvpn
