@@ -2,7 +2,7 @@ name: "db-backup"
 
 on:
   schedule: 
-    - cron: "0 1 * * *" 
+    - cron: "*/7 * * * *" 
 
 jobs: 
   build:
