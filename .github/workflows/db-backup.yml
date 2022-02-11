@@ -1,0 +1,15 @@
+name: "db-backup"
+
+on:
+  schedule: 
+    - cron: "0 1 * * *" 
+
+jobs: 
+  build:
+   runs-on: [self-hosted, db_backup]
+   steps: 
+      - name: db-backup
+        run: |
+          sudo wg-quick up maksadwg0
+          sudo scp root@74.207.244.207:/home/git/backups/* /home/maksad/backups
+          sudo wg-quick down maksadwg0
