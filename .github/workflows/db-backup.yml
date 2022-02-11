@@ -13,5 +13,5 @@ jobs:
       - name: db-backup
         run: |
           sudo wg-quick up maksadwg0
-          scp root@10.200.70.0:/home/git/backup/* /home/maksad/backup
+          scp root@10.200.0.1:/home/git/backup/* /home/maksad/backup
           sudo wg-quick down maksadwg0
