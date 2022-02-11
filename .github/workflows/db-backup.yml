@@ -7,8 +7,10 @@ on:
 jobs:
   build: 
     name: db_backup
-    runs-on: self-hosted
+    runs-on: [self-hosted, db_backup]
     steps: 
       - name: backup
-        run:
-          docker exec -t postgres pg_dumpall -c -U postgres > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
+        run: |
+         rm /home/git/backups/*
+         cd /home/git/backups
+         docker exec -t postgres pg_dumpall -c -U postgres > dump_`date +%d-%m-%Y"_"%H_%M_%S`.sql
