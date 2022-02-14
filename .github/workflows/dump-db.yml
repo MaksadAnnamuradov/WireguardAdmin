@@ -8,7 +8,7 @@ on:
 
 jobs:
   build: 
-    name: db_backup
+    name: dump-db
     runs-on: [self-hosted, dump-db]
     steps: 
       - name: dump-db
