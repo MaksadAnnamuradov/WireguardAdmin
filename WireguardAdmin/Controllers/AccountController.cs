@@ -9,6 +9,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using WireguardAdmin.Models;
+using System.Security.Cryptography;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
 namespace WireguardAdmin.Controllers
 {
@@ -90,7 +92,50 @@ namespace WireguardAdmin.Controllers
                     IPAddress = newClient.IPAddress,
                 };
 
-                adminRepository.AddUser(user);
+                await adminRepository.AddUser(user);
+
+                return RedirectToAction("Success");
+            }
+
+            ModelState.AddModelError("", "Invalid name or password");
+            return View("Index");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddNewUser(NewUserModelDto newUser)
+        {
+            if (ModelState.IsValid)
+            {
+                // generate a 128-bit salt using a cryptographically strong random sequence of nonzero values
+                byte[] salt = new byte[128 / 8];
+
+                using (var rngCsp = new RNGCryptoServiceProvider())
+                {
+                    rngCsp.GetNonZeroBytes(salt);
+                }
+
+                //Console.WriteLine($"Salt: {Convert.ToBase64String(salt)}");
+
+                // derive a 256-bit subkey (use HMACSHA256 with 100,000 iterations)
+                string hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                    password: newUser.Password,
+                    salt: salt,
+                    prf: KeyDerivationPrf.HMACSHA256,
+                    iterationCount: 100000,
+                    numBytesRequested: 256 / 8));
+
+                //Console.WriteLine($"Hashed: {hashedPassword}");
+
+                NewUserModel user = new()
+                {
+                    ID = Guid.NewGuid().ToString(),
+                    UserName = newUser.UserName,
+                    PasswordHash = hashedPassword,
+                    PasswordSalt = salt,
+                    DateAdded = DateTime.Now,
+                };
+
+                await adminRepository.AddNewUser(user);
 
                 return RedirectToAction("Success");
             }

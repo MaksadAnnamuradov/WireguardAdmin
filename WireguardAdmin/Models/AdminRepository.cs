@@ -13,12 +13,12 @@ namespace WireguardAdmin.Models
             context = ctx;
         }
 
-        public async void AddUser(User p)
+        public async Task AddUser(User p)
         {
             await context.AddAsync(p);
             await context.SaveChangesAsync();
         }
-        public async void DeleteUser(User p)
+        public async Task DeleteUser(User p)
         {
             context.Users.Remove(p);
             await context.SaveChangesAsync();
@@ -27,6 +27,12 @@ namespace WireguardAdmin.Models
         public async Task<List<User>> GetAllUsers()
         {
             return await context.Users.ToListAsync();
+        }
+
+        public async Task AddNewUser(NewUserModel p)
+        {
+            await context.AddAsync(p);
+            await context.SaveChangesAsync();
         }
     }
 }

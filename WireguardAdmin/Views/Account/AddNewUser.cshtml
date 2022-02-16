@@ -1,0 +1,50 @@
+﻿@model NewUserModelDto
+@{
+    ViewData["Title"] = "AddNewClient";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Add New User</title>
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="bg-dark text-white p-2">
+        <span class="navbar-brand ml-2">SPORTS STORE</span>
+    </div>
+    <div class="m-1 p-1">
+        <div class="text-danger" asp-validation-summary="All"></div>
+
+        <form asp-action="AddNewUser" method="post">
+            <div class="form-group">
+                <label asp-for="UserName"></label>
+                <div asp-validation-for="UserName" class="text-danger"></div>
+                <input asp-for="UserName" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <div asp-validation-for="Password" class="text-danger"></div>
+                <input type="password" asp-for="Password" class="form-control" />
+            </div>
+           @* <div class="form-group">
+                <label asp-for="AllowedIPRange"></label>
+                <div asp-validation-for="AllowedIPRange" class="text-danger"></div>
+                <input asp-for="AllowedIPRange" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="ClientPublicKey"></label>
+                <div asp-validation-for="ClientPublicKey" class="text-danger"></div>
+                <input asp-for="ClientPublicKey" type="password" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="ClientPrivateKey"></label>
+                <div asp-validation-for="ClientPrivateKey" class="text-danger"></div>
+                <input asp-for="ClientPrivateKey" type="password" class="form-control" />
+            </div>*@
+            <button class="btn btn-primary" type="submit">Add User</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -5,8 +5,9 @@ namespace WireguardAdmin.Models
 {
     public interface IAdminRepository
     {
-        void AddUser(User p);
-        void DeleteUser(User p);
+        Task AddUser(User p);
+        Task DeleteUser(User p);
         Task<List<User>> GetAllUsers();
+        Task AddNewUser(NewUserModel p);
     }
 }
