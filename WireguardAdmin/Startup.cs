@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,11 +30,15 @@ namespace WireguardAdmin
             services.AddDbContext<AdminDBContext>(options => options.UseNpgsql(Configuration["DATABASE_URL"]));
             services.AddScoped<IAdminRepository, AdminRepository>();
             services.AddControllersWithViews();
-            services.AddRazorPages();
             services.AddSession();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-               .AddCookie(x => x.LoginPath = "/Account/Login");
+               .AddCookie(options =>
+               {
+                   options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+                   options.SlidingExpiration = true;
+                   options.AccessDeniedPath = "/Account/Login";
+               });
 
             services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
         }
@@ -59,45 +64,19 @@ namespace WireguardAdmin
             app.UseAuthorization();
             app.UseAuthentication();
 
+            var cookiePolicyOptions = new CookiePolicyOptions
+            {
+                MinimumSameSitePolicy = SameSiteMode.Strict,
+            };
+            app.UseCookiePolicy(cookiePolicyOptions);
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapRazorPages();
-
-                app.UseEndpoints(endpoints =>
-                {
-                    endpoints.MapControllerRoute(
-                        name: "default",
-                        pattern: "{controller=Account}/{action=Index}/{id?}"
-                        );
-                });
-
-
-                /*endpoints.MapControllerRoute(
-                    name: "Default",
-                    pattern: "Login",
-                    defaults: new { controller = "Account", action = "Login" });
-
                 endpoints.MapControllerRoute(
-                 name: "Success",
-                 pattern: "Success",
-                 defaults: new { controller = "Account", action = "Success" });
-
-                endpoints.MapControllerRoute(
-                 name: "AddNewClient",
-                 pattern: "AddNewClient",
-                 defaults: new { controller = "Account", action = "AddNewClient" });
-                endpoints.MapControllerRoute(
-                 name: "AddNewUser",
-                 pattern: "AddNewUser",
-                 defaults: new { controller = "Account", action = "AddNewUser" });*/
-
-                /*  endpoints.MapControllerRoute(
-                   name: "Login",
-                   pattern: "Login",
-                   defaults: new { controller = "Account", action = "Login" });*/
+                    name: "default",
+                    pattern: "{controller=Account}/{action=Index}/{id?}"
+                    );
             });
-
         }
     }
 }

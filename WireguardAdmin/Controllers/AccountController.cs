@@ -30,11 +30,11 @@ namespace WireguardAdmin.Controllers
             this.wireguardOptions = wireguardOptions;
         }
 
-        [Route("/")]
-        public IActionResult Account()
+       // [Route("/")]
+       /* public IActionResult Index()
         {
             return RedirectToAction("Login");
-        }
+        }*/
         public IActionResult Login(string ReturnUrl = "/")
         {
             LoginModel objLoginModel = new LoginModel();
@@ -43,43 +43,12 @@ namespace WireguardAdmin.Controllers
             return View(objLoginModel);
         }
 
-        public bool IsValidPassword(string password, string hashPass)
-        {
-            bool result = true;
-
-            byte[] hashBytes = Convert.FromBase64String(hashPass);
-            byte[] salt = new byte[16];
-
-            Array.Copy(hashBytes, 0, salt, 0, 16);
-            var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100000);
-
-            byte[] hash = pbkdf2.GetBytes(32);
-
-            for (int i = 0; i < 16; i++)
-            {
-                if (hashBytes[i + 16] != hash[i])
-                {
-                    throw new UnauthorizedAccessException();
-                }
-            }
-
-            return result;
-        }
 
         public bool Check(string hash, string password, byte[] salt)
         {
             var verifiedHash = false;
 
-            //var parts = hash.Split('.', 3);
-
-           /* if (parts.Length != 3)
-            {
-                throw new FormatException("Unexpected hash format. " +
-                  "Should be formatted as `{iterations}.{salt}.{hash}`");
-            }*/
-
             var iterations = Convert.ToInt32(100000);
-/*            var salt = Convert.FromBase64String(salt);*/
             var key = Convert.FromBase64String(hash);
 
             var needsUpgrade = iterations != 100000;
@@ -109,7 +78,6 @@ namespace WireguardAdmin.Controllers
 
                 var verified = Check(user.PasswordHash, loginModel.Password, user.PasswordSalt);
 
-                //var validPassword = IsValidPassword(loginModel.Password, user.PasswordHash);
 
                 if (user == null && !verified)
                 {
@@ -119,42 +87,75 @@ namespace WireguardAdmin.Controllers
                 }
                 else
                 {
-                    //A claim is a statement about a subject by an issuer and
-                    //represent attributes of the subject that are useful in the context of authentication and authorization operations.
-                    var claims = new List<Claim>() {
-                    new Claim(ClaimTypes.NameIdentifier,Convert.ToString(user.ID)),
-                    new Claim(ClaimTypes.Name,user.UserName),
-                    new Claim("FavoriteDrink","Tea")
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.NameIdentifier,Convert.ToString(user.ID)),
+                        new Claim(ClaimTypes.Name,user.UserName),
+                        new Claim(ClaimTypes.Role,"User"),
                     };
-                    //Initialize a new instance of the ClaimsIdentity with the claims and authentication scheme
-                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    //Initialize a new instance of the ClaimsPrincipal with ClaimsIdentity
-                    var principal = new ClaimsPrincipal(identity);
-                    //SignInAsync is a Extension method for Sign in a principal for the specified scheme.
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                        principal, new AuthenticationProperties() { IsPersistent = loginModel.RememberLogin });
 
-                    return LocalRedirect(loginModel.ReturnUrl);
+                    var claimsIdentity = new ClaimsIdentity(
+                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+                    var authProperties = new AuthenticationProperties
+                    {
+                        //AllowRefresh = <bool>,
+                        // Refreshing the authentication session should be allowed.
+
+                        ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
+                        // The time at which the authentication ticket expires. A 
+                        // value set here overrides the ExpireTimeSpan option of 
+                        // CookieAuthenticationOptions set with AddCookie.
+
+                        IsPersistent = loginModel.RememberLogin,
+                        // Whether the authentication session is persisted across 
+                        // multiple requests. When used with cookies, controls
+                        // whether the cookie's lifetime is absolute (matching the
+                        // lifetime of the authentication ticket) or session-based.
+
+                        IssuedUtc = DateTimeOffset.UtcNow,
+                        // The time at which the authentication ticket was issued.
+
+                        RedirectUri = loginModel.ReturnUrl
+                        // The full path or absolute URI to be used as an http 
+                        // redirect response value.
+                    };
+
+                    await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme,
+                        new ClaimsPrincipal(claimsIdentity),
+                        authProperties);
+
+                    //SignInAsync is a Extension method for Sign in a principal for the specified scheme.
+                    /*await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                        principal, new AuthenticationProperties() { IsPersistent = loginModel.RememberLogin });*/
+
+                    return LocalRedirect("/Home/ConfidentialData");
                 }
             }
             ModelState.AddModelError("", "Invalid name or password");
             return View(loginModel);
         }
 
-        public async Task<IActionResult> Success()
+        //[Route("/")]
+        [Authorize]
+        public async Task<IActionResult> Index()
         {
             List<User> users = await adminRepository.GetAllUsers();
 
-           /* var output = await getStatus();
+          /*  var output = await getStatus();
 
             ViewBag.output = output;*/
 
             return View(users);
         }
 
-        public RedirectResult Logout(string returnUrl = "/")
+        public async Task<IActionResult> LogOut()
         {
-            return Redirect(returnUrl);
+            //SignOutAsync is Extension method for SignOut
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            //Redirect to home page
+            return LocalRedirect("/");
         }
 
         [HttpGet]
@@ -187,7 +188,7 @@ namespace WireguardAdmin.Controllers
 
                 await adminRepository.AddUser(user);
 
-                return RedirectToAction("Success");
+                return RedirectToAction("Index");
             }
 
             ModelState.AddModelError("", "Invalid name or password");
