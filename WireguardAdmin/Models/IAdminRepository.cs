@@ -9,5 +9,6 @@ namespace WireguardAdmin.Models
         Task DeleteUser(User p);
         Task<List<User>> GetAllUsers();
         Task AddNewUser(NewUserModel p);
+        Task<List<NewUserModel>> GetAllNewUsers();
     }
 }

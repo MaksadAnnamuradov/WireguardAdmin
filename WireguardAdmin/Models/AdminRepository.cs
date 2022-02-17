@@ -34,5 +34,10 @@ namespace WireguardAdmin.Models
             await context.AddAsync(p);
             await context.SaveChangesAsync();
         }
+
+        public async Task<List<NewUserModel>> GetAllNewUsers()
+        {
+            return await context.NewUsers.ToListAsync();
+        }
     }
 }

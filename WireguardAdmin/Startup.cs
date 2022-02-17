@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -31,6 +32,9 @@ namespace WireguardAdmin
             services.AddRazorPages();
             services.AddSession();
 
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+               .AddCookie(x => x.LoginPath = "/Account/Login");
+
             services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
         }
 
@@ -53,12 +57,23 @@ namespace WireguardAdmin
             app.UseRouting();
 
             app.UseAuthorization();
+            app.UseAuthentication();
+
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
 
-                endpoints.MapControllerRoute(
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllerRoute(
+                        name: "default",
+                        pattern: "{controller=Account}/{action=Index}/{id?}"
+                        );
+                });
+
+
+                /*endpoints.MapControllerRoute(
                     name: "Default",
                     pattern: "Login",
                     defaults: new { controller = "Account", action = "Login" });
@@ -72,11 +87,15 @@ namespace WireguardAdmin
                  name: "AddNewClient",
                  pattern: "AddNewClient",
                  defaults: new { controller = "Account", action = "AddNewClient" });
+                endpoints.MapControllerRoute(
+                 name: "AddNewUser",
+                 pattern: "AddNewUser",
+                 defaults: new { controller = "Account", action = "AddNewUser" });*/
 
-              /*  endpoints.MapControllerRoute(
-                 name: "Login",
-                 pattern: "Login",
-                 defaults: new { controller = "Account", action = "Login" });*/
+                /*  endpoints.MapControllerRoute(
+                   name: "Login",
+                   pattern: "Login",
+                   defaults: new { controller = "Account", action = "Login" });*/
             });
 
         }

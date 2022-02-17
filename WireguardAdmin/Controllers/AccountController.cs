@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 using WireguardAdmin.Models;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 
 namespace WireguardAdmin.Controllers
 {
@@ -32,22 +35,106 @@ namespace WireguardAdmin.Controllers
         {
             return RedirectToAction("Login");
         }
-        public IActionResult Login()
+        public IActionResult Login(string ReturnUrl = "/")
         {
-            return View();
+            LoginModel objLoginModel = new LoginModel();
+            objLoginModel.ReturnUrl = ReturnUrl;
+
+            return View(objLoginModel);
+        }
+
+        public bool IsValidPassword(string password, string hashPass)
+        {
+            bool result = true;
+
+            byte[] hashBytes = Convert.FromBase64String(hashPass);
+            byte[] salt = new byte[16];
+
+            Array.Copy(hashBytes, 0, salt, 0, 16);
+            var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100000);
+
+            byte[] hash = pbkdf2.GetBytes(32);
+
+            for (int i = 0; i < 16; i++)
+            {
+                if (hashBytes[i + 16] != hash[i])
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+
+            return result;
+        }
+
+        public bool Check(string hash, string password, byte[] salt)
+        {
+            var verifiedHash = false;
+
+            //var parts = hash.Split('.', 3);
+
+           /* if (parts.Length != 3)
+            {
+                throw new FormatException("Unexpected hash format. " +
+                  "Should be formatted as `{iterations}.{salt}.{hash}`");
+            }*/
+
+            var iterations = Convert.ToInt32(100000);
+/*            var salt = Convert.FromBase64String(salt);*/
+            var key = Convert.FromBase64String(hash);
+
+            var needsUpgrade = iterations != 100000;
+
+            using (var algorithm = new Rfc2898DeriveBytes(
+              password,
+              salt,
+              iterations,
+              HashAlgorithmName.SHA256))
+            {
+                var keyToCheck = algorithm.GetBytes(32);
+
+                verifiedHash = keyToCheck.SequenceEqual(key);
+
+            }
+
+            return verifiedHash;
         }
 
         [HttpPost]
-        public IActionResult Login(LoginModel loginModel)
+        public async Task<IActionResult> Login(LoginModel loginModel)
         {
             if (ModelState.IsValid)
             {
-                var username = wireguardOptions.Value.username;
-                var password = wireguardOptions.Value.password;
+                var users = await adminRepository.GetAllNewUsers();
+                var user = users.Where(x => x.UserName == loginModel.Name).FirstOrDefault();
 
-                if (loginModel.Name == username && loginModel.Password == password)
+                var verified = Check(user.PasswordHash, loginModel.Password, user.PasswordSalt);
+
+                //var validPassword = IsValidPassword(loginModel.Password, user.PasswordHash);
+
+                if (user == null && !verified)
                 {
-                    return RedirectToAction("Success");
+                    //Add logic here to display some message to user
+                    ViewBag.Message = "Invalid Credential";
+                    return View(loginModel);
+                }
+                else
+                {
+                    //A claim is a statement about a subject by an issuer and
+                    //represent attributes of the subject that are useful in the context of authentication and authorization operations.
+                    var claims = new List<Claim>() {
+                    new Claim(ClaimTypes.NameIdentifier,Convert.ToString(user.ID)),
+                    new Claim(ClaimTypes.Name,user.UserName),
+                    new Claim("FavoriteDrink","Tea")
+                    };
+                    //Initialize a new instance of the ClaimsIdentity with the claims and authentication scheme
+                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    //Initialize a new instance of the ClaimsPrincipal with ClaimsIdentity
+                    var principal = new ClaimsPrincipal(identity);
+                    //SignInAsync is a Extension method for Sign in a principal for the specified scheme.
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                        principal, new AuthenticationProperties() { IsPersistent = loginModel.RememberLogin });
+
+                    return LocalRedirect(loginModel.ReturnUrl);
                 }
             }
             ModelState.AddModelError("", "Invalid name or password");
@@ -58,9 +145,9 @@ namespace WireguardAdmin.Controllers
         {
             List<User> users = await adminRepository.GetAllUsers();
 
-            var output = await getStatus();
+           /* var output = await getStatus();
 
-            ViewBag.output = output;
+            ViewBag.output = output;*/
 
             return View(users);
         }
@@ -72,6 +159,12 @@ namespace WireguardAdmin.Controllers
 
         [HttpGet]
         public IActionResult AddNewClient()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult AddNewUser()
         {
             return View();
         }
@@ -100,6 +193,8 @@ namespace WireguardAdmin.Controllers
             ModelState.AddModelError("", "Invalid name or password");
             return View("Index");
         }
+
+
 
         [HttpPost]
         public async Task<IActionResult> AddNewUser(NewUserModelDto newUser)
@@ -137,7 +232,7 @@ namespace WireguardAdmin.Controllers
 
                 await adminRepository.AddNewUser(user);
 
-                return RedirectToAction("Success");
+                return RedirectToAction("Login");
             }
 
             ModelState.AddModelError("", "Invalid name or password");
