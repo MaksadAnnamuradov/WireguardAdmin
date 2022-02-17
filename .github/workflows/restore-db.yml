@@ -1,7 +1,7 @@
 name: "restore-db"
 
 on: 
-  workflow-dispatch:
+  workflow_dispatch:
     inputs:
       date:
         description: "Enter date of backup to restore"
