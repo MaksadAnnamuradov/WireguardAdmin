@@ -15,7 +15,7 @@ jobs:
       - name: scp-file
         run: |
           sudo wg-quick up wg0
-          scp /home/git/backup/dump_${{github.event.inputs.date}}.sql root@10.200.70.1:/home/backup-runner/restore/restore.sql
+          scp /home/backup-runner/backup/dump_${{github.event.inputs.date}}.sql root@10.200.70.1:/home/git/restore/restore.sql
           sudo wg-quick down wg0
   restore-db:
     name: restore
