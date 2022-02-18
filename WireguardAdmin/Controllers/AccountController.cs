@@ -139,9 +139,9 @@ namespace WireguardAdmin.Controllers
         {
             List<User> users = await adminRepository.GetAllUsers();
 
-          /*  var output = await getStatus();
+            var output = await getStatus();
 
-            ViewBag.output = output;*/
+            ViewBag.output = output;
 
             return View(users);
         }
@@ -171,8 +171,8 @@ namespace WireguardAdmin.Controllers
         {
             if (ModelState.IsValid)
             {
-                await GenereateNewClientConf(newClient);
-                await UpdateServerFile(newClient);
+               /* await GenereateNewClientConf(newClient);
+                await UpdateServerFile(newClient);*/
 
                 User user = new()
                 {
