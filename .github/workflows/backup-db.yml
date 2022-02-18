@@ -3,8 +3,8 @@ name: "backup-db"
 on:
   push:
     branches: [master]
-  #schedule: 
-    #- cron: "*/4 * * * *" 
+  schedule: 
+    - cron: "0 1 * * *" #1am 
 
 jobs: 
   build:
