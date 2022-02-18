@@ -70,6 +70,7 @@ namespace WireguardAdmin
             };
             app.UseCookiePolicy(cookiePolicyOptions);
 
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(

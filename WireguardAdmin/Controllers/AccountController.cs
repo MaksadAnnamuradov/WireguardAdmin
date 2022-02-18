@@ -126,10 +126,6 @@ namespace WireguardAdmin.Controllers
                         new ClaimsPrincipal(claimsIdentity),
                         authProperties);
 
-                    //SignInAsync is a Extension method for Sign in a principal for the specified scheme.
-                    /*await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                        principal, new AuthenticationProperties() { IsPersistent = loginModel.RememberLogin });*/
-
                     return LocalRedirect("/Home/ConfidentialData");
                 }
             }
@@ -138,7 +134,7 @@ namespace WireguardAdmin.Controllers
         }
 
         //[Route("/")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> Index()
         {
             List<User> users = await adminRepository.GetAllUsers();
