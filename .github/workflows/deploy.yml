@@ -17,3 +17,4 @@ jobs:
         run: |
           cd WireguardAdmin
           docker-compose up --build -d
+          sudo systemctl start WireguardAdmin
