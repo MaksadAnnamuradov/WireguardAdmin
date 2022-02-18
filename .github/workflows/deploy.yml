@@ -17,4 +17,6 @@ jobs:
         run: |
           cd WireguardAdmin
           docker-compose up --build -d
-          sh RunWireguardService.sh
+          sudo systemctl stop WireguardAdmin.service
+          dotnet publish -c Release -o /var/WireguardAdmin
+          sudo systemctl start WireguardAdmin.service
