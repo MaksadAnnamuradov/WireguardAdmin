@@ -30,11 +30,11 @@ namespace WireguardAdmin.Controllers
             this.wireguardOptions = wireguardOptions;
         }
 
-       // [Route("/")]
-       /* public IActionResult Index()
-        {
-            return RedirectToAction("Login");
-        }*/
+        // [Route("/")]
+        /* public IActionResult Index()
+         {
+             return RedirectToAction("Login");
+         }*/
         public IActionResult Login(string ReturnUrl = "/")
         {
             LoginModel objLoginModel = new LoginModel();
@@ -73,11 +73,15 @@ namespace WireguardAdmin.Controllers
         {
             if (ModelState.IsValid)
             {
+                var verified = false;
                 var users = await adminRepository.GetAllNewUsers();
                 var user = users.Where(x => x.UserName == loginModel.Name).FirstOrDefault();
 
-                var verified = Check(user.PasswordHash, loginModel.Password, user.PasswordSalt);
+                if (user != null)
+                {
+                    verified = Check(user.PasswordHash, loginModel.Password, user.PasswordSalt);
 
+                }
 
                 if (user == null && !verified)
                 {
@@ -92,10 +96,10 @@ namespace WireguardAdmin.Controllers
                         new Claim(ClaimTypes.NameIdentifier,Convert.ToString(user.ID)),
                         new Claim(ClaimTypes.Name,user.UserName),
                         new Claim(ClaimTypes.Role,"User"),
+                        new Claim("admin", "true"),
                     };
 
-                    var claimsIdentity = new ClaimsIdentity(
-                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                    var claimsIdentity = new ClaimsIdentity(claims, "cookieAuth");
 
                     var authProperties = new AuthenticationProperties
                     {
@@ -121,12 +125,9 @@ namespace WireguardAdmin.Controllers
                         // redirect response value.
                     };
 
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity),
-                        authProperties);
+                    await HttpContext.SignInAsync("cookieAuth", new ClaimsPrincipal(claimsIdentity));
 
-                    return LocalRedirect("/Home/ConfidentialData");
+                    return RedirectToPage("/Account/Index");
                 }
             }
             ModelState.AddModelError("", "Invalid name or password");
@@ -134,7 +135,7 @@ namespace WireguardAdmin.Controllers
         }
 
         //[Route("/")]
-        //[Authorize]
+        [Authorize(Policy = "admin")]
         public async Task<IActionResult> Index()
         {
             List<User> users = await adminRepository.GetAllUsers();
@@ -171,8 +172,8 @@ namespace WireguardAdmin.Controllers
         {
             if (ModelState.IsValid)
             {
-               /* await GenereateNewClientConf(newClient);
-                await UpdateServerFile(newClient);*/
+                /* await GenereateNewClientConf(newClient);
+                 await UpdateServerFile(newClient);*/
 
                 User user = new()
                 {
@@ -277,8 +278,8 @@ namespace WireguardAdmin.Controllers
                   sudo systemctl start wg-quick@wg0.service".Bash();
 
 
-           /* await $"sudo wg set wg0 peer {clientKey} allowed-ips {newClient.IPAddress};".Bash();
-            await "sudo systemctl restart wg-quick@wg0.service".Bash();*/
+            /* await $"sudo wg set wg0 peer {clientKey} allowed-ips {newClient.IPAddress};".Bash();
+             await "sudo systemctl restart wg-quick@wg0.service".Bash();*/
         }
 
         [HttpGet]
