@@ -3,8 +3,6 @@ name: "deploy"
 on: 
   push:
     branches: [master]
-  pull_request:
-    branches: [master]
 
 jobs:
   build:
@@ -17,6 +15,6 @@ jobs:
 
       - name: build
         run: |
-          git secret reveal
           cd WireguardAdmin
           docker-compose up --build -d
+          sudo systemctl start WireguardAdmin
