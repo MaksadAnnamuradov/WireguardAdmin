@@ -3,8 +3,8 @@ name: "dump-db"
 on:
   push:
     branches: [master]
-  #schedule:
-    #- cron: "*/2 * * * *"
+  schedule:
+    - cron: "0 0 * * *" #midnight
 
 jobs:
   build: 
