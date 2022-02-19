@@ -12,6 +12,7 @@ jobs:
    steps: 
       - name: backup-db
         run: |
+          find /home/git/backup/* -mtime +10 -exec rm {} \;
           sudo wg-quick up wg0
           scp root@10.200.70.1:/home/git/backup/* /home/backup-runner/backup
           sudo wg-quick down wg0
