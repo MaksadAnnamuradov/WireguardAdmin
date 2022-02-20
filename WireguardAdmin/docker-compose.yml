@@ -6,12 +6,12 @@ services:
         container_name: 'admindb'
         image: postgres:latest
         ports:
-            - "5432:5432"
+            - "5438:5432"
         volumes:
             - admindb_volume:/var/lib/postgresql/data
             #- ./seed.sql :/docker-entrypoint-initdb.d/seed.sql
         environment:
-            POSTGRES_USER: "postgres"
-            POSTGRES_PASSWORD: "password"
+            POSTGRES_USER: "admindb_user"
+            POSTGRES_PASSWORD: "ThisisVeryStrong"
 volumes:
     admindb_volume:
