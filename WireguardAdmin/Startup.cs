@@ -30,10 +30,14 @@ namespace WireguardAdmin
             services.AddDbContext<AdminDBContext>(options => options.UseNpgsql(Configuration["DATABASE_URL"]));
             services.AddScoped<IAdminRepository, AdminRepository>();
             services.AddControllersWithViews();
-            services.AddSession();
 
-            services.AddAuthentication("cookieAuth")
-               .AddCookie(("cookieAuth"),options =>
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(2);//You can set Time   
+            });
+
+           /* services.AddAuthentication("cookieAuth")
+               .AddCookie(("cookieAuth"), options =>
                {
                    options.Cookie.Name = "cookieAuth";
                    options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
@@ -41,12 +45,12 @@ namespace WireguardAdmin
                    options.LoginPath = "/Account/Login";
                    options.AccessDeniedPath = "/Account/AccessDenied";
                }
-               );
+               );*/
 
-            services.AddAuthorization(options =>
+            /*services.AddAuthorization(options =>
             {
                 options.AddPolicy("admin", policy => policy.RequireClaim("admin"));
-            });
+            });*/
 
             services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
         }
@@ -69,8 +73,10 @@ namespace WireguardAdmin
 
             app.UseRouting();
 
-            app.UseAuthorization();
-            app.UseAuthentication();
+            /*app.UseAuthorization();
+            app.UseAuthentication();*/
+
+            app.UseSession();
 
             /*var cookiePolicyOptions = new CookiePolicyOptions
             {

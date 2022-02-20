@@ -10,7 +10,7 @@ namespace WireguardAdmin.Controllers
         {
             return View();
         }
-        [Authorize]
+        //[Authorize]
         public IActionResult ConfidentialData()
         {
             return View();

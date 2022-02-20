@@ -1,4 +1,4 @@
-﻿@model IEnumerable<User>
+﻿@model IEnumerable<NewUserModel>
 @{
     ViewData["Title"] = "Index";
 }
@@ -21,18 +21,18 @@
 
     <table class="table table-bordered table-striped table-sm">
         <thead>
-            <tr><th>Name</th> <th>Date</th> <th>IPAddress</th> <th>AllowedIPRange</th><th>PublicKey</th></tr>
+            <tr><th>UserName</th> <th>Date</th> <th>SessionID</th> <th>Session Exp</th><th>Password Hash</th></tr>
         </thead>
         <tbody>
-            @foreach (WireguardAdmin.Models.User user in Model)
+            @foreach (WireguardAdmin.Models.NewUserModel user in Model)
             {
                 <tr>
 
-                    <td>@user.Name</td>
+                    <td>@user.UserName</td>
                     <td>@user.DateAdded</td>
-                    <td>@user.IPAddress</td>
-                    <td>@user.AllowedIPRange</td>
-                    <td>@user.ClientPublicKey</td>
+                    <td>@user.SessionId</td>
+                    <td>@user.SessionExpiration</td>
+                    <td>@user.PasswordHash</td>
                 </tr>
             }
         </tbody>
