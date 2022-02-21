@@ -107,7 +107,7 @@ namespace WireguardAdmin.Controllers
                     }
 
 
-                    /* var claims = new List<Claim>
+                    var claims = new List<Claim>
                      {
                          new Claim(ClaimTypes.NameIdentifier,Convert.ToString(user.ID)),
                          new Claim(ClaimTypes.Name,user.UserName),
@@ -115,33 +115,33 @@ namespace WireguardAdmin.Controllers
                          new Claim("admin", "true"),
                      };
 
-                     var claimsIdentity = new ClaimsIdentity(claims, "cookieAuth");
+                    var claimsIdentity = new ClaimsIdentity(claims, "cookieAuth");
 
-                     var authProperties = new AuthenticationProperties
-                     {
-                         //AllowRefresh = <bool>,
-                         // Refreshing the authentication session should be allowed.
+                    var authProperties = new AuthenticationProperties
+                    {
+                        //AllowRefresh = <bool>,
+                        // Refreshing the authentication session should be allowed.
 
-                         ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
-                         // The time at which the authentication ticket expires. A 
-                         // value set here overrides the ExpireTimeSpan option of 
-                         // CookieAuthenticationOptions set with AddCookie.
+                        ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
+                        // The time at which the authentication ticket expires. A 
+                        // value set here overrides the ExpireTimeSpan option of 
+                        // CookieAuthenticationOptions set with AddCookie.
 
-                         IsPersistent = loginModel.RememberLogin,
-                         // Whether the authentication session is persisted across 
-                         // multiple requests. When used with cookies, controls
-                         // whether the cookie's lifetime is absolute (matching the
-                         // lifetime of the authentication ticket) or session-based.
+                        IsPersistent = loginModel.RememberLogin,
+                        // Whether the authentication session is persisted across 
+                        // multiple requests. When used with cookies, controls
+                        // whether the cookie's lifetime is absolute (matching the
+                        // lifetime of the authentication ticket) or session-based.
 
-                         IssuedUtc = DateTimeOffset.UtcNow,
-                         // The time at which the authentication ticket was issued.
+                        IssuedUtc = DateTimeOffset.UtcNow,
+                        // The time at which the authentication ticket was issued.
 
-                         RedirectUri = loginModel.ReturnUrl
-                         // The full path or absolute URI to be used as an http 
-                         // redirect response value.
-                     };
+                        RedirectUri = loginModel.ReturnUrl
+                        // The full path or absolute URI to be used as an http 
+                        // redirect response value.
+                    };
 
-                     await HttpContext.SignInAsync("cookieAuth", new ClaimsPrincipal(claimsIdentity));*/
+                    await HttpContext.SignInAsync("cookieAuth", new ClaimsPrincipal(claimsIdentity));
 
                     return RedirectToAction("Index");
                 }
@@ -175,9 +175,20 @@ namespace WireguardAdmin.Controllers
         public async Task<IActionResult> LogOut()
         {
             //SignOutAsync is Extension method for SignOut
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync("cookieAuth");
+            string userSession = HttpContext.Session.GetString("user_session_id");
+
+            var users = await adminRepository.GetAllNewUsers();
+            var user = users.Where(x => x.SessionId == userSession).FirstOrDefault();
+
+            user.SessionId = "";
+            user.SessionExpiration = TimeSpan.FromMinutes(0);
+
+            await adminRepository.SaveChanges();
+
+            HttpContext.Session.Remove("user_session_id");
             //Redirect to home page
-            return LocalRedirect("/");
+            return LocalRedirect("/Account/Login");
         }
 
         [HttpGet]

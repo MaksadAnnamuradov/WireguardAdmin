@@ -36,21 +36,21 @@ namespace WireguardAdmin
                 options.IdleTimeout = TimeSpan.FromMinutes(2);//You can set Time   
             });
 
-           /* services.AddAuthentication("cookieAuth")
+            services.AddAuthentication("cookieAuth")
                .AddCookie(("cookieAuth"), options =>
                {
                    options.Cookie.Name = "cookieAuth";
                    options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
                    options.SlidingExpiration = true;
-                   options.LoginPath = "/Account/Login";
-                   options.AccessDeniedPath = "/Account/AccessDenied";
+                   /*options.LoginPath = "/Account/Login";
+                   options.AccessDeniedPath = "/Account/AccessDenied";*/
                }
-               );*/
+               );
 
-            /*services.AddAuthorization(options =>
+            services.AddAuthorization(options =>
             {
                 options.AddPolicy("admin", policy => policy.RequireClaim("admin"));
-            });*/
+            });
 
             services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
         }
@@ -73,16 +73,16 @@ namespace WireguardAdmin
 
             app.UseRouting();
 
-            /*app.UseAuthorization();
-            app.UseAuthentication();*/
+            app.UseAuthorization();
+            app.UseAuthentication();
 
             app.UseSession();
 
-            /*var cookiePolicyOptions = new CookiePolicyOptions
+            var cookiePolicyOptions = new CookiePolicyOptions
             {
                 MinimumSameSitePolicy = SameSiteMode.Strict,
             };
-            app.UseCookiePolicy(cookiePolicyOptions);*/
+            app.UseCookiePolicy(cookiePolicyOptions);
 
 
             app.UseEndpoints(endpoints =>
