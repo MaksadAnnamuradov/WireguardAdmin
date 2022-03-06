@@ -11,6 +11,6 @@ namespace WireguardAdmin.Models
         public AdminDBContext(DbContextOptions<AdminDBContext> options)
             : base(options) { }
         public DbSet<User> Users { get; set; }
-        public DbSet<NewUserModel> NewUsers { get; set; }
+        public DbSet<NewUserModelDbo> NewUsers { get; set; }
     }
 }

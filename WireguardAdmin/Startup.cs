@@ -42,8 +42,8 @@ namespace WireguardAdmin
                    options.Cookie.Name = "cookieAuth";
                    options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
                    options.SlidingExpiration = true;
-                   /*options.LoginPath = "/Account/Login";
-                   options.AccessDeniedPath = "/Account/AccessDenied";*/
+                   options.LoginPath = "/Account/Login";
+                   options.AccessDeniedPath = "/Account/AccessDenied";
                }
                );
 
@@ -75,6 +75,8 @@ namespace WireguardAdmin
 
             app.UseAuthorization();
             app.UseAuthentication();
+
+            app.UseMiddleware<AntiXssMiddleware>();
 
             app.UseSession();
 

@@ -155,14 +155,13 @@ namespace WireguardAdmin.Controllers
         public async Task<IActionResult> Index()
         {
 
-
             if (string.IsNullOrEmpty(HttpContext.Session.GetString("user_session_id")) || string.IsNullOrEmpty(HttpContext.Session.GetString("user_session_expiration")))
             {
                 return RedirectToAction("Login");
             }
             else
             {
-                List<NewUserModel> users = await adminRepository.GetAllNewUsers();
+                List<NewUserModelDbo> users = await adminRepository.GetAllNewUsers();
 
                 //var output = await getStatus();
 
@@ -258,7 +257,7 @@ namespace WireguardAdmin.Controllers
                 var UserSessionId = Guid.NewGuid().ToString();
                 var UserSessionExpiration = TimeSpan.FromMinutes(2);
 
-                NewUserModel user = new()
+                NewUserModelDbo user = new()
                 {
                     ID = Guid.NewGuid().ToString(),
                     UserName = newUser.UserName,

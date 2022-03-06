@@ -29,7 +29,7 @@ namespace WireguardAdmin.Models
             return await context.Users.ToListAsync();
         }
 
-        public async Task AddNewUser(NewUserModel p)
+        public async Task AddNewUser(NewUserModelDbo p)
         {
             await context.AddAsync(p);
             await context.SaveChangesAsync();
@@ -40,7 +40,7 @@ namespace WireguardAdmin.Models
             await context.SaveChangesAsync();
         }
 
-        public async Task<List<NewUserModel>> GetAllNewUsers()
+        public async Task<List<NewUserModelDbo>> GetAllNewUsers()
         {
             return await context.NewUsers.ToListAsync();
         }
