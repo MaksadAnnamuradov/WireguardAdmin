@@ -17,7 +17,9 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace WireguardAdmin.Controllers
 {
-    public class AccountController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AccountController : ControllerBase
     {
         private readonly ILogger<AccountController> _logger;
         private readonly IAdminRepository adminRepository;
@@ -28,19 +30,6 @@ namespace WireguardAdmin.Controllers
             _logger = logger;
             this.adminRepository = adminRepository;
             this.wireguardOptions = wireguardOptions;
-        }
-
-        // [Route("/")]
-        /* public IActionResult Index()
-         {
-             return RedirectToAction("Login");
-         }*/
-        public IActionResult Login(string ReturnUrl = "/")
-        {
-            LoginModel objLoginModel = new LoginModel();
-            objLoginModel.ReturnUrl = ReturnUrl;
-
-            return View(objLoginModel);
         }
 
 
@@ -73,105 +62,15 @@ namespace WireguardAdmin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var verified = false;
-                var users = await adminRepository.GetAllNewUsers();
-                var user = users.Where(x => x.UserName == loginModel.Name).FirstOrDefault();
-
-                if (user != null)
-                {
-                    verified = Check(user.PasswordHash, loginModel.Password, user.PasswordSalt);
-                }
-
-                if (user == null && !verified)
-                {
-                    //Add logic here to display some message to user
-                    ViewBag.Message = "Invalid Credential";
-                    return View(loginModel);
-                }
-                else
-                {
-
-                    if (string.IsNullOrEmpty(HttpContext.Session.GetString("user_session_id")) || string.IsNullOrEmpty(HttpContext.Session.GetString("user_session_expiration")))
-                    {
-                        var UserSessionId = Guid.NewGuid().ToString();
-                        var UserSessionExpiration = TimeSpan.FromMinutes(2);
-
-                        user.SessionId = UserSessionId;
-                        user.SessionExpiration = UserSessionExpiration;
-
-                        await adminRepository.SaveChanges();
-
-
-                        HttpContext.Session.SetString("user_session_id", UserSessionId);
-                        HttpContext.Session.SetString("user_session_expiration", UserSessionExpiration.ToString());
-                    }
-
-
-                    var claims = new List<Claim>
-                     {
-                         new Claim(ClaimTypes.NameIdentifier,Convert.ToString(user.ID)),
-                         new Claim(ClaimTypes.Name,user.UserName),
-                         new Claim(ClaimTypes.Role,"User"),
-                         new Claim("admin", "true"),
-                     };
-
-                    var claimsIdentity = new ClaimsIdentity(claims, "cookieAuth");
-
-                    var authProperties = new AuthenticationProperties
-                    {
-                        //AllowRefresh = <bool>,
-                        // Refreshing the authentication session should be allowed.
-
-                        ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
-                        // The time at which the authentication ticket expires. A 
-                        // value set here overrides the ExpireTimeSpan option of 
-                        // CookieAuthenticationOptions set with AddCookie.
-
-                        IsPersistent = loginModel.RememberLogin,
-                        // Whether the authentication session is persisted across 
-                        // multiple requests. When used with cookies, controls
-                        // whether the cookie's lifetime is absolute (matching the
-                        // lifetime of the authentication ticket) or session-based.
-
-                        IssuedUtc = DateTimeOffset.UtcNow,
-                        // The time at which the authentication ticket was issued.
-
-                        RedirectUri = loginModel.ReturnUrl
-                        // The full path or absolute URI to be used as an http 
-                        // redirect response value.
-                    };
-
-                    await HttpContext.SignInAsync("cookieAuth", new ClaimsPrincipal(claimsIdentity));
-
-                    return RedirectToAction("Index");
-                }
+                
             }
-            ModelState.AddModelError("", "Invalid name or password");
-            return View(loginModel);
+
+            return BadRequest("User object is not valid");
+
         }
 
-        //[Route("/")]
-        //[Authorize(Policy = "admin")]
-        public async Task<IActionResult> Index()
-        {
-
-            if (string.IsNullOrEmpty(HttpContext.Session.GetString("user_session_id")) || string.IsNullOrEmpty(HttpContext.Session.GetString("user_session_expiration")))
-            {
-                return RedirectToAction("Login");
-            }
-            else
-            {
-                List<NewUserModelDbo> users = await adminRepository.GetAllNewUsers();
-
-                //var output = await getStatus();
-
-                //ViewBag.output = output;
-
-                return View(users);
-            }
-        }
-
-        public async Task<IActionResult> LogOut()
+       
+ /*       public async Task<IActionResult> LogOut()
         {
             //SignOutAsync is Extension method for SignOut
             await HttpContext.SignOutAsync("cookieAuth");
@@ -189,26 +88,15 @@ namespace WireguardAdmin.Controllers
             //Redirect to home page
             return LocalRedirect("/Account/Login");
         }
+*/
 
-        [HttpGet]
-        public IActionResult AddNewClient()
-        {
-            return View();
-        }
-
-        [HttpGet]
-        public IActionResult AddNewUser()
-        {
-            return View();
-        }
-
-        [HttpPost]
+     /*   [HttpPost]
         public async Task<IActionResult> AddNewClient(NewClientModel newClient)
         {
             if (ModelState.IsValid)
             {
-                /* await GenereateNewClientConf(newClient);
-                 await UpdateServerFile(newClient);*/
+                *//* await GenereateNewClientConf(newClient);
+                 await UpdateServerFile(newClient);*//*
 
                 User user = new()
                 {
@@ -222,15 +110,12 @@ namespace WireguardAdmin.Controllers
 
                 return RedirectToAction("Index");
             }
-
-            ModelState.AddModelError("", "Invalid name or password");
-            return View("Index");
-        }
+        }*/
 
 
 
         [HttpPost]
-        public async Task<IActionResult> AddNewUser(NewUserModelDto newUser)
+        public async Task<IActionResult> Signup(NewUserModelDto newUser)
         {
             if (ModelState.IsValid)
             {
@@ -241,8 +126,6 @@ namespace WireguardAdmin.Controllers
                 {
                     rngCsp.GetNonZeroBytes(salt);
                 }
-
-                //Console.WriteLine($"Salt: {Convert.ToBase64String(salt)}");
 
                 // derive a 256-bit subkey (use HMACSHA256 with 100,000 iterations)
                 string hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
@@ -276,8 +159,7 @@ namespace WireguardAdmin.Controllers
                 return RedirectToAction("Login");
             }
 
-            ModelState.AddModelError("", "Invalid name or password");
-            return View("Index");
+            return BadRequest("User object is not valid");
         }
 
         public async Task GenereateNewClientConf(NewClientModel newClient)

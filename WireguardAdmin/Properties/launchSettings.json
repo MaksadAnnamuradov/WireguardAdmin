@@ -17,10 +17,11 @@
     },
     "WireguardAdmin": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
+      "applicationUrl": "https://localhost:5001",
       "dotnetRunMessages": "true",
       "launchUrl": "https://localhost:5001"
     },

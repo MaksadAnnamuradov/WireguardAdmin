@@ -1,0 +1,55 @@
+﻿@model SignupModel
+@{
+    ViewData["Title"] = "Signup";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Sign up</title>
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div class="bg-dark text-white p-2">
+    </div>
+    <div class="m-1 p-1">
+        <div class="text-danger" asp-validation-summary="All"></div>
+
+        <form asp-action="Signup" asp-controller="Account" method="post">
+            <div class="form-group">
+                <label asp-for="Username"></label>
+                <div asp-validation-for="Username" class="text-danger"></div>
+                <input asp-for="Username" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <div asp-validation-for="Password" class="text-danger"></div>
+                <input type="password" asp-for="Password" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="ConfirmPassword"></label>
+                <div asp-validation-for="ConfirmPassword" class="text-danger"></div>
+                <input type="password" asp-for="ConfirmPassword" class="form-control" />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="BirthDate"></label>
+                <div asp-validation-for="BirthDate" class="text-danger"></div>
+                <input type="date" asp-for="BirthDate" asp-format="{0:yyyy-MM-dd}" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="ProfileDescription"></label>
+                <div asp-validation-for="ProfileDescription" class="text-danger"></div>
+                <input type="string" asp-for="ProfileDescription" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="FavoritePet"></label>
+                <div asp-validation-for="FavoritePet" class="text-danger"></div>
+                <input type="string" asp-for="FavoritePet" class="form-control" />
+            </div>
+            <button class="btn btn-primary" type="submit">Sign Up</button>
+        </form>
+    </div>
+</body>
+</html>

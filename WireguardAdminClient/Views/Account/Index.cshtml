@@ -21,10 +21,10 @@
 
     <table class="table table-bordered table-striped table-sm">
         <thead>
-            <tr><th>UserName</th> <th>Date</th> <th>SessionID</th> <th>Session Exp</th><th>Password Hash</th></tr>
+            <tr><th>UserName</th> <th>Date</th></tr>
         </thead>
         <tbody>
-            @foreach (WireguardAdmin.Models.NewUserModel user in Model)
+            @foreach (WireguardAdminClient.Models.NewUserModel user in Model)
             {
                 <tr>
 
