@@ -58,7 +58,7 @@ namespace WireguardAdmin.Models
 
         private async Task<NewUserModel> addNewDbUserAsync(NewUserModelDbo dbPerson)
         {
-            await context.NewUsers.AddAsync(dbPerson);
+            //await context.NewUsers.AddAsync(dbPerson);
             await context.SaveChangesAsync();
             return mapper.Map<NewUserModel>(dbPerson);
         }

@@ -15,101 +15,181 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using WireguardAdmin.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
+using WireguardAdminClient.Models;
+
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Net;
+using System.Text;
 
 namespace WireguardAdmin.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class AccountController : ControllerBase
+    [ApiController]
+
+    //Logging template:
+    //{Prefix}: {Message}, {ObjectsToBeLogged}
+    public class AuthenticationController : ControllerBase
     {
-        private readonly IAdminRepository adminRepository;
-        private readonly IWireguardService wireguardService;
+        private readonly UserManager<WireguardUser> userManager;
+        private readonly RoleManager<IdentityRole> roleManager;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthenticationController> _logger;
 
-        public AccountController(IAdminRepository adminRepository, IWireguardService wireguardService)
+        public AuthenticationController(UserManager<WireguardUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, ILogger<AuthenticationController> logger)
         {
-            this.adminRepository = adminRepository;
-            this.wireguardService = wireguardService;
+            this.userManager = userManager;
+            this.roleManager = roleManager;
+            _configuration = configuration;
+            _logger = logger;
         }
-
-
-    
-
-        [HttpGet]
-        public async Task<IActionResult> Login(LoginModel loginModel)
-        {
-            if (ModelState.IsValid)
-            {
-                var verified = false;
-                var users = await adminRepository.GetAllNewUsers();
-                var user = users.Where(x => x.UserName == loginModel.Name).FirstOrDefault();
-
-                if (user != null)
-                {
-                    verified = wireguardService.Check(user.PasswordHash, loginModel.Password, user.PasswordSalt);
-                }
-
-                if (user == null && !verified)
-                {
-                    //Add logic here to display some message to user
-                    return BadRequest("Username or password is incorrect");
-                }
-            
-                return View(loginModel);
-
-            }
-
-            return BadRequest("User object is not valid");
-
-        }
-
-
 
         [HttpPost]
         [Route("Signup")]
-        public async Task<IActionResult> Signup([FromBody] NewUserModelDto newUser)
+        public async Task<IActionResult> Register([FromBody] SignupModel model)
         {
-            if (ModelState.IsValid)
+            var userExist = await userManager.FindByEmailAsync(model.Username);
+
+            if (userExist != null)
             {
-                // generate a 128-bit salt using a cryptographically strong random sequence of nonzero values
-                byte[] salt = new byte[128 / 8];
-
-                using (var rngCsp = new RNGCryptoServiceProvider())
-                {
-                    rngCsp.GetNonZeroBytes(salt);
-                }
-
-                // derive a 256-bit subkey (use HMACSHA256 with 100,000 iterations)
-                string hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                    password: newUser.Password,
-                    salt: salt,
-                    prf: KeyDerivationPrf.HMACSHA256,
-                    iterationCount: 100000,
-                    numBytesRequested: 256 / 8));
-
-                //Console.WriteLine($"Hashed: {hashedPassword}");
-
-                var UserSessionId = Guid.NewGuid().ToString();
-                var UserSessionExpiration = TimeSpan.FromMinutes(2);
-
-                NewUserModelDbo user = new()
-                {
-                    ID = Guid.NewGuid().ToString(),
-                    UserName = newUser.UserName,
-                    PasswordHash = hashedPassword,
-                    PasswordSalt = salt,
-                    DateAdded = DateTime.Now,
-                    SessionId = UserSessionId,
-                    SessionExpiration = UserSessionExpiration
-                };
-
-                await adminRepository.AddNewUser(user);
-
-                return Ok();
+                _logger.LogWarning("Attempted to register an existing user");
+                return StatusCode(StatusCodes.Status500InternalServerError, " User Already Exist");
             }
 
-            return BadRequest("User object is not valid");
+
+            WireguardUser user = new WireguardUser
+            {
+                UserName = model.Username,
+                ProfileDescription = model.ProfileDescription,
+                FavoritePet = model.FavoritePet,
+                BirthDate = model.BirthDate,
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            var result = await userManager.CreateAsync(user, model.Password);
+
+            if (!result.Succeeded)
+            {
+                _logger.LogError("Server encountered an error registering user: {Username}/{UserId}", user.UserName, user.Id);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to register new user: " + result.Errors);
+            }
+
+            _logger.LogInformation("Successfully registered new user under username: {Username}, Id: {UserId}", user.UserName, user.Id);
+            return Ok("User Created Successfully");
         }
 
+
+        [HttpPost]
+        [Route("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        {
+            var user = await userManager.FindByNameAsync(model.Userame);
+            if (user != null && await userManager.CheckPasswordAsync(user, model.Password))
+            {
+                var userRoles = await userManager.GetRolesAsync(user);
+                var authClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                };
+                foreach (var userRole in userRoles)
+                {
+                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                }
+                var authSiginKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["JWT:Secret"]));
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["JWT:ValidIssuer"],
+                    audience: _configuration["JWT:ValidAudience"],
+                    expires: DateTime.Now.AddDays(1),
+                    claims: authClaims,
+                    signingCredentials: new SigningCredentials(authSiginKey, SecurityAlgorithms.HmacSha256Signature)
+                    );
+                _logger.LogInformation("Successfully Logged in User: {userId}", user.Id);
+                return Ok(new
+                {
+                    token = new JwtSecurityTokenHandler().WriteToken(token),
+                    ValidTo = token.ValidTo.ToString("yyyy-MM-ddThh:mm:ss"),
+                    User = user
+                });
+            }
+            return Unauthorized();
+        }
+
+        /*[HttpGet]
+        [Route("{Scheme}")]
+        public async Task Get([FromRoute] string scheme)
+        {
+            const string callbackScheme = "xamarinessentials";
+
+            var auth = await Request.HttpContext.AuthenticateAsync(scheme);
+
+            if (!auth.Succeeded
+                || auth?.Principal == null
+                || !auth.Principal.Identities.Any(id => id.IsAuthenticated)
+                || string.IsNullOrEmpty(auth.Properties.GetTokenValue("access_token")))
+            {
+                // Not authenticated, challenge
+                await Request.HttpContext.ChallengeAsync(scheme);
+            }
+            else
+            {
+                var claims = auth.Principal.Identities.FirstOrDefault()?.Claims;
+
+
+
+                var username = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Name)?.Value;
+                var id = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var firstname = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GivenName)?.Value;
+                var lastname = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Surname)?.Value;
+                var email = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
+
+
+                var userExist = await userManager.FindByEmailAsync(email);
+
+                if (userExist == null)
+                {
+                    ApiUser user = new ApiUser
+                    {
+                        Id = id,
+                        Email = email,
+                        SecurityStamp = Guid.NewGuid().ToString(),
+                        UserName = username.Replace(" ", "").ToLower()
+                    };
+
+                    var result = await userManager.CreateAsync(user);
+
+                    if (!result.Succeeded)
+                    {
+                        Console.WriteLine(result);
+                    }
+
+                }
+
+
+
+                // Get parameters to send back to the callback
+                var qs = new Dictionary<string, string>
+                {
+                    { "access_token", auth.Properties.GetTokenValue("access_token") },
+                    { "refresh_token", auth.Properties.GetTokenValue("refresh_token") ?? string.Empty },
+                    { "expires", (auth.Properties.ExpiresUtc?.ToUnixTimeSeconds() ?? -1).ToString() },
+                    { "email", email },
+                    {"id", id }
+                };
+
+                // Build the result url
+                var url = callbackScheme + "://#" + string.Join(
+                    "&",
+                    qs.Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "-1")
+                    .Select(kvp => $"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(kvp.Value)}"));
+
+                // Redirect to final url
+                Request.HttpContext.Response.Redirect(url);
+            }
+
+        }*/
 
     }
 }
