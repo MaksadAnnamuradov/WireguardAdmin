@@ -4,10 +4,10 @@ using WireguardAdmin.Models;
 namespace WireguardAdmin.Mappers
 {
 
-    public class AspenMapperProfile : Profile
+    public class WireguardAdminMapper : Profile
     {
 
-        public AspenMapperProfile()
+        public WireguardAdminMapper()
         {
 
             CreateMap<NewUserModelDbo, NewUserModel>()
