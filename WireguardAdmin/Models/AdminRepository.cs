@@ -23,6 +23,17 @@ namespace WireguardAdmin.Models
             return await context.Users.ToListAsync();
         }
 
+        public async Task<WireguardUser> GetUserAsync(string userID)
+        {
+            return await Task.Run(() => context.Users.AsNoTracking().First(r => r.Id == userID));
+        }
+
+        public bool UserExists(string userID)
+        {
+            return context.Users.Any(e => e.Id == userID);
+        }
+
+
         public async Task SaveChanges()
         {
             await context.SaveChangesAsync();

@@ -49,13 +49,13 @@ namespace WireguardAdmin
             {
                 o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
-                .AddCookie()
-                .AddGoogle(g =>
+                .AddCookie();
+              /*  .AddGoogle(g =>
                 {
                     g.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";
                     g.ClientSecret = "8PRENu0lnO9Ck-7INd81bg3l";
                     g.SaveTokens = true;
-                });
+                });*/
 
             //Adding Authentication
             services.AddAuthentication(options =>
@@ -145,12 +145,12 @@ namespace WireguardAdmin
 
             app.UseRouting();
 
-            //app.UseAuthorization();
-            //app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseAuthentication();
 
             //app.UseMiddleware<AntiXssMiddleware>();
 
-            //app.UseSession();
+           // app.UseSession();
 
             /*var cookiePolicyOptions = new CookiePolicyOptions
             {

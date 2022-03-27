@@ -50,7 +50,7 @@ namespace WireguardAdmin.Controllers
         [Route("Signup")]
         public async Task<IActionResult> Register([FromBody] SignupModel model)
         {
-            var userExist = await userManager.FindByEmailAsync(model.Username);
+            var userExist = await userManager.FindByEmailAsync(model.UserName);
 
             if (userExist != null)
             {
@@ -61,7 +61,7 @@ namespace WireguardAdmin.Controllers
 
             WireguardUser user = new WireguardUser
             {
-                UserName = model.Username,
+                UserName = model.UserName,
                 ProfileDescription = model.ProfileDescription,
                 FavoritePet = model.FavoritePet,
                 BirthDate = model.BirthDate,

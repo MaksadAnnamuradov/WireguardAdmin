@@ -7,6 +7,8 @@ namespace WireguardAdmin.Models
     {
         Task DeleteUser(WireguardUser p);
         Task<List<WireguardUser>> GetAllUsers();
+        Task<WireguardUser> GetUserAsync(string userID);
+        bool UserExists(string userID);
         Task SaveChanges();
 
     }
