@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,6 +12,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using WireguardAdminClient.Data;
+using WireguardAdminClient.Models;
 using WireguardAdminClient.Services;
 
 namespace WireguardAdminClient
@@ -27,6 +31,18 @@ namespace WireguardAdminClient
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+            services.AddRazorPages();
+            services.AddDbContext<WireguardAdminClientContext>(options => options.UseNpgsql(Configuration["DATABASE_URL"]));
+            //services.AddScoped<IAdminRepository, AdminRepository>();
+            services.AddScoped<IWireguardService, WireguardService>();
+            services.AddControllers();
+
+            //services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
+            //For Identity
+            /*services.AddIdentity<WireguardUser, IdentityRole>()
+                .AddEntityFrameworkStores<AdminDBContext>()
+
+                .AddDefaultTokenProviders();*/
 
             services.AddSession(options =>
             {
@@ -73,6 +89,7 @@ namespace WireguardAdminClient
                     name: "default",
                     pattern: "{controller=Account}/{action=Index}/{id?}"
                     );
+                endpoints.MapRazorPages();
             });
         }
     }

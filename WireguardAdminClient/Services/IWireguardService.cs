@@ -14,6 +14,6 @@ namespace WireguardAdminClient.Services
         Task SignupUser([Body] SignupModel signupModel);
 
         [Post("/api/acount/login")]
-        Task LoginUser([Body] LoginModel loginModel);
+        Task LoginUser([Body] Login loginModel);
     }
 }

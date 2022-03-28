@@ -30,7 +30,7 @@ namespace WireguardAdmin.Controllers
 
         public IActionResult Login(string ReturnUrl = "/")
         {
-            LoginModel objLoginModel = new LoginModel();
+            Login objLoginModel = new Login();
             objLoginModel.ReturnUrl = ReturnUrl;
 
             return View(objLoginModel);
@@ -38,7 +38,7 @@ namespace WireguardAdmin.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> Login(LoginModel loginModel)
+        public async Task<IActionResult> Login(Login loginModel)
         {
             if (ModelState.IsValid)
             {

@@ -19,7 +19,7 @@ namespace WireguardAdminClient.Services
         {
             await wireguardService.SignupUser(signupModel);
         }
-        public async Task LoginUser(LoginModel loginModel)
+        public async Task LoginUser(Login loginModel)
         {
             await wireguardService.LoginUser(loginModel);
         }

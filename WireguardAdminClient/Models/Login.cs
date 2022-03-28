@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WireguardAdminClient.Models
 {
-    public class LoginModel
+    public class Login
     {
 
         [Required]
