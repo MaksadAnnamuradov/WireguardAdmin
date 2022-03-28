@@ -2,169 +2,155 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using WireguardAdmin.Mappers;
 using WireguardAdmin.Models;
 using WireguardAdmin.Services;
 
-namespace WireguardAdmin
+var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Services.AddDbContext<AdminDBContext>(options => options.UseNpgsql(builder.Configuration["DATABASE_URL"]));
+builder.Services.AddTransient<IAdminRepository, AdminRepository>();
+builder.Services.AddTransient<IWireguardService, WireguardService>();
+builder.Services.AddControllers();
+
+//For Identity
+builder.Services.AddIdentity<WireguardUser, IdentityRole>(options =>
 {
-    public class Startup
+    options.User.RequireUniqueEmail = false;
+})
+    .AddEntityFrameworkStores<AdminDBContext>()
+    .AddDefaultTokenProviders();
+
+
+//Adding Authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+ {
+     options.SaveToken = true;
+     options.RequireHttpsMetadata = false;
+     options.TokenValidationParameters = new TokenValidationParameters()
+     {
+         ValidateIssuer = true,
+         ValidateAudience = true,
+         ValidAudience = builder.Configuration["JWT:ValidAudience"],
+         ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
+     };
+ });
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    // Password settings.
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequiredUniqueChars = 1;
+
+    // Lockout settings.
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // User settings.
+    options.User.AllowedUserNameCharacters =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+    options.User.RequireUniqueEmail = false;
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    // Cookie settings
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+
+    options.LoginPath = "/login";
+    options.AccessDeniedPath = "/AccessDenied";
+    options.SlidingExpiration = true;
+});
+
+builder.Services.AddEndpointsApiExplorer();
+
+// Enable Swagger   
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "JCMFitnessPostgresAPI", Version = "v1" });
+
+
+    var securityScheme = new OpenApiSecurityScheme
     {
-        public Startup(IConfiguration configuration)
+        Name = "JWT Authentication",
+        Description = "Enter JWT Bearer token **_only_**",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer", // must be lower case
+        BearerFormat = "JWT",
+        Reference = new OpenApiReference
         {
-            Configuration = configuration;
+            Id = JwtBearerDefaults.AuthenticationScheme,
+            Type = ReferenceType.SecurityScheme
         }
-
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddDbContext<AdminDBContext>(options => options.UseNpgsql(Configuration["DATABASE_URL"]));
-            services.AddScoped<IAdminRepository, AdminRepository>();
-            services.AddScoped<IWireguardService, WireguardService>();
-            services.AddControllers();
-
-            //services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
-            //For Identity
-            services.AddIdentity<WireguardUser, IdentityRole>()
-                .AddEntityFrameworkStores<AdminDBContext>()
-                .AddDefaultTokenProviders();
-
-            services.AddAuthentication(o =>
-            {
-                o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            })
-                .AddCookie()
-                .AddGoogle(g =>
+    };
+    c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
-                    g.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";
-                    g.ClientSecret = "8PRENu0lnO9Ck-7INd81bg3l";
-                    g.SaveTokens = true;
+                    {securityScheme, new string[] { }}
                 });
 
-            //Adding Authentication
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
+    // add Basic Authentication
+    var basicSecurityScheme = new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "basic",
+        Reference = new OpenApiReference { Id = "BasicAuth", Type = ReferenceType.SecurityScheme }
+    };
 
-
-
-            //Adding Jwt Bearer
-            .AddJwtBearer(options =>
-            {
-                options.SaveToken = true;
-                options.RequireHttpsMetadata = false;
-                options.TokenValidationParameters = new TokenValidationParameters()
+    c.AddSecurityDefinition(basicSecurityScheme.Reference.Id, basicSecurityScheme);
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = Configuration["JWT:ValidAudience"],
-                    ValidIssuer = Configuration["JWT:ValidIssuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWT:Secret"])),
-                };
-            });
-            services.AddEndpointsApiExplorer();
-            //services.AddSwaggerGen();
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "JCMFitnessPostgresAPI", Version = "v1" });
-
-
-                var securityScheme = new OpenApiSecurityScheme
-                {
-                    Name = "JWT Authentication",
-                    Description = "Enter JWT Bearer token **_only_**",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "bearer", // must be lower case
-                    BearerFormat = "JWT",
-                    Reference = new OpenApiReference
-                    {
-                        Id = JwtBearerDefaults.AuthenticationScheme,
-                        Type = ReferenceType.SecurityScheme
-                    }
-                };
-                c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                      {securityScheme, new string[] { }}
+                    {basicSecurityScheme, new string[] { }}
                 });
-
-                // add Basic Authentication
-                var basicSecurityScheme = new OpenApiSecurityScheme
-                {
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "basic",
-                    Reference = new OpenApiReference { Id = "BasicAuth", Type = ReferenceType.SecurityScheme }
-                };
-
-                c.AddSecurityDefinition(basicSecurityScheme.Reference.Id, basicSecurityScheme);
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                      {basicSecurityScheme, new string[] { }}
-                });
-            });
-        }
+});
+        
 
 
+var app = builder.Build();
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                Console.WriteLine("Development");
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-            else
-            {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseRouting();
-
-            app.UseAuthorization();
-            app.UseAuthentication();
-
-            //app.UseMiddleware<AntiXssMiddleware>();
-
-           // app.UseSession();
-
-            /*var cookiePolicyOptions = new CookiePolicyOptions
-            {
-                MinimumSameSitePolicy = SameSiteMode.Strict,
-            };
-            app.UseCookiePolicy(cookiePolicyOptions);*/
-
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-        }
-
-    }
-
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AdminDBContext>();
+    context.Database.Migrate();
+    // context.Database.EnsureCreated();
+}
+
+app.UseHttpsRedirection();
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();

@@ -6,11 +6,12 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WireguardAdmin.Models;
+using WireguardAdmin.Models.Users;
 
 namespace WireguardAdmin.Controllers
 {
 
-    //[Authorize]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
 
@@ -32,7 +33,7 @@ namespace WireguardAdmin.Controllers
         }
 
         [HttpGet("getall")]
-        //[Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IEnumerable<WireguardUser>> GetAllUsers()
         {
             _logger.LogDebug("Attempted to get all users");

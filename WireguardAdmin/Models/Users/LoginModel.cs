@@ -10,7 +10,7 @@ namespace WireguardAdmin.Models
     {
 
         [Required]
-        public string Userame { get; set; }
+        public string Username { get; set; }
 
         [Required]
         public string Password { get; set; }

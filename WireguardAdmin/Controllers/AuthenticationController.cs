@@ -31,84 +31,110 @@ namespace WireguardAdmin.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly UserManager<WireguardUser> userManager;
-        private readonly RoleManager<IdentityRole> roleManager;
+        private readonly UserManager<WireguardUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<AuthenticationController> _logger;
 
-        public AuthenticationController(UserManager<WireguardUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, ILogger<AuthenticationController> logger)
+        public AuthenticationController(
+            UserManager<WireguardUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            IConfiguration configuration)
         {
-            this.userManager = userManager;
-            this.roleManager = roleManager;
+            _userManager = userManager;
+            _roleManager = roleManager;
             _configuration = configuration;
-            _logger = logger;
         }
 
         [HttpPost]
-        [Route("Signup")]
-        public async Task<IActionResult> Register([FromBody] SignupModel model)
-        {
-            var userExist = await userManager.FindByEmailAsync(model.UserName);
-
-            if (userExist != null)
-            {
-                _logger.LogWarning("Attempted to register an existing user");
-                return StatusCode(StatusCodes.Status500InternalServerError, " User Already Exist");
-            }
-
-
-            WireguardUser user = new WireguardUser
-            {
-                Email = "maksad.annamuradow98@gmail.com",
-                UserName = model.UserName,
-                ProfileDescription = model.ProfileDescription,
-                FavoritePet = model.FavoritePet,
-                BirthDate = model.BirthDate,
-                SecurityStamp = Guid.NewGuid().ToString(),
-            };
-
-            var result = await userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
-            {
-                _logger.LogError("Server encountered an error registering user: {Username}/{UserId}", user.UserName, user.Id);
-                return StatusCode(StatusCodes.Status500InternalServerError, "Failed to register new user: " + result.Errors);
-            }
-
-            _logger.LogInformation("Successfully registered new user under username: {Username}, Id: {UserId}", user.UserName, user.Id);
-            return Ok("User Created Successfully");
-        }
-
-
-        [HttpPost]
-        [Route("Login")]
+        [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var user = await userManager.FindByNameAsync(model.Userame);
-            if (user != null && await userManager.CheckPasswordAsync(user, model.Password))
+            var user = await _userManager.FindByNameAsync(model.Username);
+
+            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var userRoles = await userManager.GetRolesAsync(user);
+                var userRoles = await _userManager.GetRolesAsync(user);
+
                 var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
+
                 foreach (var userRole in userRoles)
                 {
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
                 }
+
                 var token = GetToken(authClaims);
 
-                _logger.LogInformation("Successfully Logged in User: {userId}", user.Id);
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
-                    ValidTo = token.ValidTo.ToString("yyyy-MM-ddThh:mm:ss"),
-                    expiration = token.ValidTo,
-                    User = user
+                    expiration = token.ValidTo
                 });
             }
+
             return Unauthorized();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = UserRoles.Admin)]
+        [Route("signup")]
+        public async Task<IActionResult> Signup([FromBody] SignupModel model)
+        {
+            var userExists = await _userManager.FindByNameAsync(model.Username);
+            if (userExists != null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
+
+            WireguardUser user = new()
+            {
+                Email = model.Email,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                UserName = model.Username,
+                ProfileDescription = model.ProfileDescription,
+                BirthDate = model.BirthDate,
+                FavoritePet = model.FavoritePet,
+            };
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+
+            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+        }
+
+        [HttpPost]
+        [Route("register-admin")]
+        public async Task<IActionResult> RegisterAdmin([FromBody] SignupModel model)
+        {
+            var userExists = await _userManager.FindByNameAsync(model.Username);
+            if (userExists != null)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
+
+            WireguardUser user = new()
+            {
+                Email = model.Email,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                UserName = model.Username
+            };
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+
+            if (!await _roleManager.RoleExistsAsync(UserRoles.Admin))
+                await _roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+            if (!await _roleManager.RoleExistsAsync(UserRoles.User))
+                await _roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+
+            if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
+            {
+                await _userManager.AddToRoleAsync(user, UserRoles.Admin);
+            }
+            if (await _roleManager.RoleExistsAsync(UserRoles.Admin))
+            {
+                await _userManager.AddToRoleAsync(user, UserRoles.User);
+            }
+            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
         }
 
         private JwtSecurityToken GetToken(List<Claim> authClaims)
@@ -125,117 +151,81 @@ namespace WireguardAdmin.Controllers
 
             return token;
         }
+    }
 
-        [HttpPost]
-        [Route("register-admin")]
-        public async Task<IActionResult> RegisterAdmin([FromBody] SignupModel model)
+    /*[HttpGet]
+    [Route("{Scheme}")]
+    public async Task Get([FromRoute] string scheme)
+    {
+        const string callbackScheme = "xamarinessentials";
+
+        var auth = await Request.HttpContext.AuthenticateAsync(scheme);
+
+        if (!auth.Succeeded
+            || auth?.Principal == null
+            || !auth.Principal.Identities.Any(id => id.IsAuthenticated)
+            || string.IsNullOrEmpty(auth.Properties.GetTokenValue("access_token")))
         {
-            var userExists = await userManager.FindByNameAsync(model.UserName);
-            if (userExists != null)
-                return StatusCode(StatusCodes.Status500InternalServerError, "User already exists!");
-
-            WireguardUser user = new WireguardUser
-            {
-                UserName = model.UserName,
-                ProfileDescription = model.ProfileDescription,
-                FavoritePet = model.FavoritePet,
-                BirthDate = model.BirthDate,
-                SecurityStamp = Guid.NewGuid().ToString(),
-            };
-
-            var result = await userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, "User creation failed! Please check user details and try again." );
-
-            if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
-                await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
-            if (!await roleManager.RoleExistsAsync(UserRoles.User))
-                await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
-
-            if (await roleManager.RoleExistsAsync(UserRoles.Admin))
-            {
-                await userManager.AddToRoleAsync(user, UserRoles.Admin);
-            }
-            if (await roleManager.RoleExistsAsync(UserRoles.Admin))
-            {
-                await userManager.AddToRoleAsync(user, UserRoles.User);
-            }
-            return Ok("User created successfully!" );
+            // Not authenticated, challenge
+            await Request.HttpContext.ChallengeAsync(scheme);
         }
-
-        /*[HttpGet]
-        [Route("{Scheme}")]
-        public async Task Get([FromRoute] string scheme)
+        else
         {
-            const string callbackScheme = "xamarinessentials";
+            var claims = auth.Principal.Identities.FirstOrDefault()?.Claims;
 
-            var auth = await Request.HttpContext.AuthenticateAsync(scheme);
 
-            if (!auth.Succeeded
-                || auth?.Principal == null
-                || !auth.Principal.Identities.Any(id => id.IsAuthenticated)
-                || string.IsNullOrEmpty(auth.Properties.GetTokenValue("access_token")))
+
+            var username = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Name)?.Value;
+            var id = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var firstname = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GivenName)?.Value;
+            var lastname = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Surname)?.Value;
+            var email = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
+
+
+            var userExist = await userManager.FindByEmailAsync(email);
+
+            if (userExist == null)
             {
-                // Not authenticated, challenge
-                await Request.HttpContext.ChallengeAsync(scheme);
-            }
-            else
-            {
-                var claims = auth.Principal.Identities.FirstOrDefault()?.Claims;
-
-
-
-                var username = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Name)?.Value;
-                var id = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                var firstname = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GivenName)?.Value;
-                var lastname = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Surname)?.Value;
-                var email = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
-
-
-                var userExist = await userManager.FindByEmailAsync(email);
-
-                if (userExist == null)
+                ApiUser user = new ApiUser
                 {
-                    ApiUser user = new ApiUser
-                    {
-                        Id = id,
-                        Email = email,
-                        SecurityStamp = Guid.NewGuid().ToString(),
-                        UserName = username.Replace(" ", "").ToLower()
-                    };
-
-                    var result = await userManager.CreateAsync(user);
-
-                    if (!result.Succeeded)
-                    {
-                        Console.WriteLine(result);
-                    }
-
-                }
-
-
-
-                // Get parameters to send back to the callback
-                var qs = new Dictionary<string, string>
-                {
-                    { "access_token", auth.Properties.GetTokenValue("access_token") },
-                    { "refresh_token", auth.Properties.GetTokenValue("refresh_token") ?? string.Empty },
-                    { "expires", (auth.Properties.ExpiresUtc?.ToUnixTimeSeconds() ?? -1).ToString() },
-                    { "email", email },
-                    {"id", id }
+                    Id = id,
+                    Email = email,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    UserName = username.Replace(" ", "").ToLower()
                 };
 
-                // Build the result url
-                var url = callbackScheme + "://#" + string.Join(
-                    "&",
-                    qs.Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "-1")
-                    .Select(kvp => $"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(kvp.Value)}"));
+                var result = await userManager.CreateAsync(user);
 
-                // Redirect to final url
-                Request.HttpContext.Response.Redirect(url);
+                if (!result.Succeeded)
+                {
+                    Console.WriteLine(result);
+                }
+
             }
 
-        }*/
 
-    }
+
+            // Get parameters to send back to the callback
+            var qs = new Dictionary<string, string>
+            {
+                { "access_token", auth.Properties.GetTokenValue("access_token") },
+                { "refresh_token", auth.Properties.GetTokenValue("refresh_token") ?? string.Empty },
+                { "expires", (auth.Properties.ExpiresUtc?.ToUnixTimeSeconds() ?? -1).ToString() },
+                { "email", email },
+                {"id", id }
+            };
+
+            // Build the result url
+            var url = callbackScheme + "://#" + string.Join(
+                "&",
+                qs.Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "-1")
+                .Select(kvp => $"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(kvp.Value)}"));
+
+            // Redirect to final url
+            Request.HttpContext.Response.Redirect(url);
+        }
+
+    }*/
+
 }
+
