@@ -49,13 +49,13 @@ namespace WireguardAdmin
             {
                 o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
             })
-                .AddCookie();
-              /*  .AddGoogle(g =>
+                .AddCookie()
+                .AddGoogle(g =>
                 {
                     g.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";
                     g.ClientSecret = "8PRENu0lnO9Ck-7INd81bg3l";
                     g.SaveTokens = true;
-                });*/
+                });
 
             //Adding Authentication
             services.AddAuthentication(options =>
@@ -79,11 +79,10 @@ namespace WireguardAdmin
                     ValidAudience = Configuration["JWT:ValidAudience"],
                     ValidIssuer = Configuration["JWT:ValidIssuer"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["JWT:Secret"])),
-
-
                 };
             });
             services.AddEndpointsApiExplorer();
+            //services.AddSwaggerGen();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "JCMFitnessPostgresAPI", Version = "v1" });
@@ -96,7 +95,7 @@ namespace WireguardAdmin
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.Http,
                     Scheme = "bearer", // must be lower case
-                     BearerFormat = "JWT",
+                    BearerFormat = "JWT",
                     Reference = new OpenApiReference
                     {
                         Id = JwtBearerDefaults.AuthenticationScheme,
@@ -109,8 +108,8 @@ namespace WireguardAdmin
                       {securityScheme, new string[] { }}
                 });
 
-                 // add Basic Authentication
-                 var basicSecurityScheme = new OpenApiSecurityScheme
+                // add Basic Authentication
+                var basicSecurityScheme = new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.Http,
                     Scheme = "basic",
@@ -143,6 +142,7 @@ namespace WireguardAdmin
                 app.UseHsts();
             }
 
+            app.UseHttpsRedirection();
             app.UseRouting();
 
             app.UseAuthorization();

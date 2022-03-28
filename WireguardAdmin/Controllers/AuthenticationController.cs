@@ -23,14 +23,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Text;
+using WireguardAdmin.Models.Users;
 
 namespace WireguardAdmin.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-
-    //Logging template:
-    //{Prefix}: {Message}, {ObjectsToBeLogged}
     public class AuthenticationController : ControllerBase
     {
         private readonly UserManager<WireguardUser> userManager;
@@ -61,6 +59,7 @@ namespace WireguardAdmin.Controllers
 
             WireguardUser user = new WireguardUser
             {
+                Email = "maksad.annamuradow98@gmail.com",
                 UserName = model.UserName,
                 ProfileDescription = model.ProfileDescription,
                 FavoritePet = model.FavoritePet,
@@ -98,23 +97,70 @@ namespace WireguardAdmin.Controllers
                 {
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
                 }
-                var authSiginKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["JWT:Secret"]));
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["JWT:ValidIssuer"],
-                    audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddDays(1),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(authSiginKey, SecurityAlgorithms.HmacSha256Signature)
-                    );
+                var token = GetToken(authClaims);
+
                 _logger.LogInformation("Successfully Logged in User: {userId}", user.Id);
                 return Ok(new
                 {
                     token = new JwtSecurityTokenHandler().WriteToken(token),
                     ValidTo = token.ValidTo.ToString("yyyy-MM-ddThh:mm:ss"),
+                    expiration = token.ValidTo,
                     User = user
                 });
             }
             return Unauthorized();
+        }
+
+        private JwtSecurityToken GetToken(List<Claim> authClaims)
+        {
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JWT:ValidIssuer"],
+                audience: _configuration["JWT:ValidAudience"],
+                expires: DateTime.Now.AddHours(3),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+
+            return token;
+        }
+
+        [HttpPost]
+        [Route("register-admin")]
+        public async Task<IActionResult> RegisterAdmin([FromBody] SignupModel model)
+        {
+            var userExists = await userManager.FindByNameAsync(model.UserName);
+            if (userExists != null)
+                return StatusCode(StatusCodes.Status500InternalServerError, "User already exists!");
+
+            WireguardUser user = new WireguardUser
+            {
+                UserName = model.UserName,
+                ProfileDescription = model.ProfileDescription,
+                FavoritePet = model.FavoritePet,
+                BirthDate = model.BirthDate,
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            var result = await userManager.CreateAsync(user, model.Password);
+            if (!result.Succeeded)
+                return StatusCode(StatusCodes.Status500InternalServerError, "User creation failed! Please check user details and try again." );
+
+            if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
+                await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));
+            if (!await roleManager.RoleExistsAsync(UserRoles.User))
+                await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
+
+            if (await roleManager.RoleExistsAsync(UserRoles.Admin))
+            {
+                await userManager.AddToRoleAsync(user, UserRoles.Admin);
+            }
+            if (await roleManager.RoleExistsAsync(UserRoles.Admin))
+            {
+                await userManager.AddToRoleAsync(user, UserRoles.User);
+            }
+            return Ok("User created successfully!" );
         }
 
         /*[HttpGet]

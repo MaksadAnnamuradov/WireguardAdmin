@@ -10,9 +10,9 @@ using WireguardAdmin.Models;
 namespace WireguardAdmin.Controllers
 {
 
-    [Route("api/[controller]")]
     [Authorize]
     [ApiController]
+    [Route("api/[controller]")]
 
     public class UserController : ControllerBase
     {
