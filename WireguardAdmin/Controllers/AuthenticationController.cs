@@ -46,6 +46,7 @@ namespace WireguardAdmin.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
@@ -79,7 +80,7 @@ namespace WireguardAdmin.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = UserRoles.Admin)]
+        [AllowAnonymous]
         [Route("signup")]
         public async Task<IActionResult> Signup([FromBody] SignupModel model)
         {
