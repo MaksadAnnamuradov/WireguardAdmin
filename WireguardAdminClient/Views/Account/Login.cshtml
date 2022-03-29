@@ -3,7 +3,7 @@
     ViewData["Title"] = "Login";
 }
 @{
-     Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <html>
@@ -19,15 +19,15 @@
     <div class="m-4 p-4">
         <div class="text-danger" asp-validation-summary="All"></div>
 
-         @if (!string.IsNullOrEmpty(ViewBag.Message))
-            {
-                <span class="text-danger">
-                    @ViewBag.Message
-                </span>
-            }
-            @Html.HiddenFor(x => x.ReturnUrl)
+        @if (!string.IsNullOrEmpty(ViewBag.Message))
+        {
+            <span class="text-danger">
+                @ViewBag.Message
+            </span>
+        }
+        @Html.HiddenFor(x => x.ReturnUrl)
 
-        <form asp-action="Login" method="post">
+        <form asp-action="Login" method="post" asp-controller="Account">
             <input type="hidden" asp-for="ReturnUrl" />
             <div class="form-group">
                 <label asp-for="Username"></label>
@@ -50,7 +50,17 @@
 
             <button class="btn btn-primary" type="submit">Log In</button>
         </form>
-         <a asp-controller="User" asp-action="SignupUser">Sign up </a>
+
+
+        <div class="col-lg-12 p-2">
+            <a target="_blank"
+               href="~https:localhost:5001/authentication/google-login"
+               class="btn btn-block btn-primary">
+                <span class="icon-google"></span> Google
+            </a>
+        </div>
+
+        <a asp-controller="User" asp-action="SignupUser">Sign up </a>
     </div>
 </body>
 </html>

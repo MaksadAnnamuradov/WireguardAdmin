@@ -36,6 +36,12 @@ namespace WireguardAdmin.Controllers
             return View(objLoginModel);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExternalLogin()
+        {
+            await wireguardService.ExternalLogin();
+            return View();
+        }
 
         [HttpPost]
         public async Task<IActionResult> Login(Login loginModel)

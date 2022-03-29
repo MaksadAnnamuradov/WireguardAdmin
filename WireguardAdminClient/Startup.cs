@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using WireguardAdminClient.Data;
 using WireguardAdminClient.Models;
 using WireguardAdminClient.Services;
 
@@ -32,17 +31,16 @@ namespace WireguardAdminClient
         {
             services.AddControllersWithViews();
             services.AddRazorPages();
-            services.AddDbContext<WireguardAdminClientContext>(options => options.UseNpgsql(Configuration["DATABASE_URL"]));
+            //services.AddDbContext<WireguardAdminClientContext>(options => options.UseNpgsql(Configuration["DATABASE_URL"]));
             //services.AddScoped<IAdminRepository, AdminRepository>();
             services.AddScoped<IWireguardService, WireguardService>();
             services.AddControllers();
 
             //services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
             //For Identity
-            /*services.AddIdentity<WireguardUser, IdentityRole>()
-                .AddEntityFrameworkStores<AdminDBContext>()
-
-                .AddDefaultTokenProviders();*/
+            /*  services.AddIdentity<IdentityUser, IdentityRole>()
+                  .AddEntityFrameworkStores<WireguardAdminClientContext>()
+                  .AddDefaultTokenProviders();*/
 
             services.AddSession(options =>
             {
@@ -71,8 +69,8 @@ namespace WireguardAdminClient
 
             app.UseRouting();
 
-            app.UseAuthorization();
-            app.UseAuthentication();
+          /*  app.UseAuthorization();
+            app.UseAuthentication();*/
 
             app.UseSession();
 
@@ -89,7 +87,6 @@ namespace WireguardAdminClient
                     name: "default",
                     pattern: "{controller=Account}/{action=Index}/{id?}"
                     );
-                endpoints.MapRazorPages();
             });
         }
     }

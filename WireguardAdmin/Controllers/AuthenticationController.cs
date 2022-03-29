@@ -24,6 +24,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Text;
 using WireguardAdmin.Models.Users;
+using Microsoft.AspNetCore.Authentication.Google;
 
 namespace WireguardAdmin.Controllers
 {
@@ -33,16 +34,120 @@ namespace WireguardAdmin.Controllers
     {
         private readonly UserManager<WireguardUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly SignInManager<WireguardUser> _signInManager;
         private readonly IConfiguration _configuration;
 
         public AuthenticationController(
             UserManager<WireguardUser> userManager,
             RoleManager<IdentityRole> roleManager,
+            SignInManager<WireguardUser> signInManager,
             IConfiguration configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _signInManager = signInManager;
             _configuration = configuration;
+        }
+
+        [Route("google-login")]
+        [HttpGet]
+        public IActionResult GoogleLogin(string returnUrl = null)
+        {
+            string provider = "Google";
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Authentication", new { returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return Challenge(properties, provider);
+        }
+
+        /*[Route("google-response")]
+        [HttpGet]
+        public async Task<IActionResult> GoogleResponse()
+        {
+            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var claims = result.Principal.Identities
+                .FirstOrDefault().Claims.Select(claim => new
+                {
+                    claim.Issuer,
+                    claim.OriginalIssuer,
+                    claim.Type,
+                    claim.Value
+                });
+
+            return Ok(claims);
+        }*/
+
+
+        [Route("google-response")]
+        [HttpGet]
+        public async Task<IActionResult>
+            ExternalLoginCallback(string returnUrl = null, string remoteError = null)
+        {
+            returnUrl = returnUrl ?? Url.Content("~/");
+
+       /*     LogInViewModel loginViewModel = new LogInViewModel
+            {
+                ReturnUrl = returnUrl,
+                ExternalLogins =
+                        (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
+            };*/
+
+            if (remoteError != null)
+            {
+               /* ModelState
+                    .AddModelError(string.Empty, $"Error from external provider: {remoteError}");*/
+
+                return BadRequest("Error");
+            }
+
+            // Get the login information about the user from the external login provider
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                return BadRequest("Another error");
+            }
+
+            // If the user already has a login (i.e if there is a record in AspNetUserLogins
+            // table) then sign-in the user with this external login provider
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider,
+                info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+
+            if (signInResult.Succeeded)
+            {
+                return LocalRedirect(returnUrl);
+            }
+            // If there is no record in AspNetUserLogins table, the user may not have
+            // a local account
+            else
+            {
+                // Get the email claim value
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+
+                if (email != null)
+                {
+                    // Create a new user without password if we do not have a user already
+                    var user = await _userManager.FindByEmailAsync(email);
+
+                    if (user == null)
+                    {
+                        user = new WireguardUser
+                        {
+                            UserName = info.Principal.FindFirstValue(ClaimTypes.Email),
+                            Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                        };
+
+                        await _userManager.CreateAsync(user);
+                    }
+
+                    // Add a login (i.e insert a row for the user in AspNetUserLogins table)
+                    await _userManager.AddLoginAsync(user, info);
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+
+                    return LocalRedirect(returnUrl);
+                }
+
+                return BadRequest($"Email claim not received from: {info.LoginProvider}");
+            }
         }
 
         [HttpPost]

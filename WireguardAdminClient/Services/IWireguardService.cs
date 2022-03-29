@@ -10,10 +10,17 @@ namespace WireguardAdminClient.Services
     public interface IWireguardService
     {
 
-        [Post("/api/account/signup")]
+        [Post("/api/authentication/signup")]
         Task SignupUser([Body] SignupModel signupModel);
 
-        [Post("/api/acount/login")]
+        [Post("/api/authentication/login")]
         Task LoginUser([Body] Login loginModel);
+
+        [Get("/api/authentication/google-login")]
+        Task ExternalLogin();
+
+        [Get("api/profile")]
+        [Headers("Authorization: Bearer")]
+        Task Profile();
     }
 }

@@ -23,5 +23,13 @@ namespace WireguardAdminClient.Services
         {
             await wireguardService.LoginUser(loginModel);
         }
+        public async Task ExternalLogin()
+        {
+            await wireguardService.ExternalLogin();
+        }
+        public async Task<IActionResult> Profile()
+        {
+            await wireguardService.Profile();
+        }
     }
 }
