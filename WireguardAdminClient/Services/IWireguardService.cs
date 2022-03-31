@@ -19,7 +19,7 @@ namespace WireguardAdminClient.Services
         [Get("/api/authentication/google-login")]
         Task ExternalLogin();
 
-        [Get("api/profile")]
+        [Get("/api/profile")]
         [Headers("Authorization: Bearer")]
         Task Profile();
     }

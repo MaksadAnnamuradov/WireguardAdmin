@@ -25,6 +25,7 @@ using System.Net;
 using System.Text;
 using WireguardAdmin.Models.Users;
 using Microsoft.AspNetCore.Authentication.Google;
+using Auth0.AspNetCore.Authentication;
 
 namespace WireguardAdmin.Controllers
 {
@@ -48,54 +49,68 @@ namespace WireguardAdmin.Controllers
             _signInManager = signInManager;
             _configuration = configuration;
         }
-
-        [Route("google-login")]
+        [AllowAnonymous]
         [HttpGet]
-        public IActionResult GoogleLogin(string returnUrl = null)
+        [Route("AuthLogin")]
+        public async Task Login(string returnUrl = "/")
         {
-            string provider = "Google";
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Authentication", new { returnUrl });
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-            return Challenge(properties, provider);
+            var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
+                // Indicate here where Auth0 should redirect the user after a login.
+                // Note that the resulting absolute Uri must be added to the
+                // **Allowed Callback URLs** settings for the app.
+                .WithRedirectUri("https://localhost:5001")
+                .Build();
+
+            await HttpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
         }
 
-        /*[Route("google-response")]
+        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GoogleResponse()
+        [Route("Logout")]
+        public async Task Logout()
         {
-            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
+                // Indicate here where Auth0 should redirect the user after a logout.
+                // Note that the resulting absolute Uri must be added to the
+                // **Allowed Logout URLs** settings for the app.
+                .WithRedirectUri(Url.Action("Index", "Home"))
+                .Build();
 
-            var claims = result.Principal.Identities
-                .FirstOrDefault().Claims.Select(claim => new
-                {
-                    claim.Issuer,
-                    claim.OriginalIssuer,
-                    claim.Type,
-                    claim.Value
-                });
+            await HttpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        }
 
-            return Ok(claims);
-        }*/
+        [Authorize]
+        [HttpGet]
+        [Route("Profile")]
+        public IActionResult Profile()
+        {
+            return Ok(new
+            {
+                Name = User.Identity.Name,
+                EmailAddress = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value,
+                ProfileImage = User.Claims.FirstOrDefault(c => c.Type == "picture")?.Value
+            });
+        }
 
-
-        [Route("google-response")]
+       /* [Route("google-response")]
         [HttpGet]
         public async Task<IActionResult>
             ExternalLoginCallback(string returnUrl = null, string remoteError = null)
         {
             returnUrl = returnUrl ?? Url.Content("~/");
 
-       /*     LogInViewModel loginViewModel = new LogInViewModel
+       *//*     LogInViewModel loginViewModel = new LogInViewModel
             {
                 ReturnUrl = returnUrl,
                 ExternalLogins =
                         (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
-            };*/
+            };*//*
 
             if (remoteError != null)
             {
-               /* ModelState
-                    .AddModelError(string.Empty, $"Error from external provider: {remoteError}");*/
+               *//* ModelState
+                    .AddModelError(string.Empty, $"Error from external provider: {remoteError}");*//*
 
                 return BadRequest("Error");
             }
@@ -148,9 +163,9 @@ namespace WireguardAdmin.Controllers
 
                 return BadRequest($"Email claim not received from: {info.LoginProvider}");
             }
-        }
+        }*/
 
-        [HttpPost]
+        /*[HttpPost]
         [AllowAnonymous]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
@@ -182,7 +197,7 @@ namespace WireguardAdmin.Controllers
             }
 
             return Unauthorized();
-        }
+        }*/
 
         [HttpPost]
         [AllowAnonymous]

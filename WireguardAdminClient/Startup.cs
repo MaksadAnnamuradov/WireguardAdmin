@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -31,16 +33,22 @@ namespace WireguardAdminClient
         {
             services.AddControllersWithViews();
             services.AddRazorPages();
-            //services.AddDbContext<WireguardAdminClientContext>(options => options.UseNpgsql(Configuration["DATABASE_URL"]));
-            //services.AddScoped<IAdminRepository, AdminRepository>();
             services.AddScoped<IWireguardService, WireguardService>();
             services.AddControllers();
 
-            //services.Configure<WireguardAdminOptions>(Configuration.GetSection(WireguardAdminOptions.WireguardAdmin));
-            //For Identity
-            /*  services.AddIdentity<IdentityUser, IdentityRole>()
-                  .AddEntityFrameworkStores<WireguardAdminClientContext>()
-                  .AddDefaultTokenProviders();*/
+            services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+            })
+            .AddCookie()
+            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+            {
+                options.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";
+                options.ClientSecret = "8PRENu0lnO9Ck-7INd81bg3l";
+                options.SignInScheme = IdentityConstants.ExternalScheme;
+                options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+            });
 
             services.AddSession(options =>
             {
@@ -69,8 +77,8 @@ namespace WireguardAdminClient
 
             app.UseRouting();
 
-          /*  app.UseAuthorization();
-            app.UseAuthentication();*/
+            app.UseAuthorization();
+            app.UseAuthentication();
 
             app.UseSession();
 

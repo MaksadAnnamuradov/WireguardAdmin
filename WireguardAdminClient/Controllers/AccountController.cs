@@ -15,6 +15,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using WireguardAdminClient.Services;
+using Microsoft.AspNetCore.Authentication.Google;
 
 namespace WireguardAdmin.Controllers
 {
@@ -36,12 +37,61 @@ namespace WireguardAdmin.Controllers
             return View(objLoginModel);
         }
 
+
+        //[Route("google-login")]
         [HttpGet]
-        public async Task<IActionResult> ExternalLogin()
+        public IActionResult ExternalLogin()
         {
-            await wireguardService.ExternalLogin();
-            return View();
+            return new ChallengeResult(
+                GoogleDefaults.AuthenticationScheme,
+                new AuthenticationProperties
+                {
+                    RedirectUri = Url.Action("GoogleResponse", "GoogleLogin") // Where google responds back
+                });
         }
+
+        /// <summary>
+        /// Google Login Response After Login Operation From Google Page
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<IActionResult> GoogleResponse()
+        {
+            //Check authentication response as mentioned on startup file as o.DefaultSignInScheme = "External"
+            var authenticateResult = await HttpContext.AuthenticateAsync("External");
+            if (!authenticateResult.Succeeded)
+                return BadRequest(); // TODO: Handle this better.
+            //Check if the redirection has been done via google or any other links
+            if (authenticateResult.Principal.Identities.ToList()[0].AuthenticationType.ToLower() == "google")
+            {
+                //check if principal value exists or not 
+                if (authenticateResult.Principal != null)
+                {
+                    //get google account id for any operation to be carried out on the basis of the id
+                    var googleAccountId = authenticateResult.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    //claim value initialization as mentioned on the startup file with o.DefaultScheme = "Application"
+                    var claimsIdentity = new ClaimsIdentity("Application");
+                    if (authenticateResult.Principal != null)
+                    {
+                        //Now add the values on claim and redirect to the page to be accessed after successful login
+                        var details = authenticateResult.Principal.Claims.ToList();
+                        claimsIdentity.AddClaim(authenticateResult.Principal.FindFirst(ClaimTypes.NameIdentifier));// Full Name Of The User
+                        claimsIdentity.AddClaim(authenticateResult.Principal.FindFirst(ClaimTypes.Email)); // Email Address of The User
+                        await HttpContext.SignInAsync("Application", new ClaimsPrincipal(claimsIdentity));
+                        return RedirectToAction("Index", "Dashboard");
+                    }
+                }
+            }
+            return RedirectToAction("Account", "AddNewClient");
+        }
+
+
+        /* [HttpGet]
+         public async Task<IActionResult> ExternalLogin()
+         {
+             await wireguardService.ExternalLogin();
+             return View();
+         }*/
 
         [HttpPost]
         public async Task<IActionResult> Login(Login loginModel)

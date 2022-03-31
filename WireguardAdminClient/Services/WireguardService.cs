@@ -27,7 +27,7 @@ namespace WireguardAdminClient.Services
         {
             await wireguardService.ExternalLogin();
         }
-        public async Task<IActionResult> Profile()
+        public async Task Profile()
         {
             await wireguardService.Profile();
         }

@@ -1,15 +1,20 @@
+using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System;
 using System.Text;
+using System.Threading.Tasks;
 using WireguardAdmin.Models;
 using WireguardAdmin.Services;
 
@@ -31,13 +36,12 @@ builder.Services.AddIdentity<WireguardUser, IdentityRole>(options =>
 
 
 //Adding Authentication
-builder.Services.AddAuthentication(options =>
+/*builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddCookie()
 .AddJwtBearer(options =>
  {
      options.SaveToken = true;
@@ -50,44 +54,64 @@ builder.Services.AddAuthentication(options =>
          ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
      };
- })
-.AddGoogle(googleOptions =>
+ });*/
+
+/*.AddGoogle(googleOptions =>
 {
     googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
     googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-});
+});*/
 
-builder.Services.Configure<IdentityOptions>(options =>
+builder.Services.AddAuthentication(options =>
 {
-    // Password settings.
-    options.Password.RequireDigit = true;
-    options.Password.RequireLowercase = true;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequiredLength = 6;
-    options.Password.RequiredUniqueChars = 1;
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+})
+ .AddCookie()
+ .AddOpenIdConnect("Auth0", options =>
+ {
+     options.Authority = $"https://{builder.Configuration["Auth0:Domain"]}";
+     options.ClientId = builder.Configuration["Auth0:ClientId"];
+     options.ClientSecret = builder.Configuration["Auth0:ClientSecret"];
+     options.SaveTokens = true;
+     options.ResponseType = OpenIdConnectResponseType.Code;
+     options.CallbackPath = new PathString("/callback");
+     options.TokenValidationParameters = new TokenValidationParameters
+     {
+         NameClaimType = "name"
+     };
+     options.Events = new OpenIdConnectEvents
+     {
+         OnRedirectToIdentityProviderForSignOut = (context) =>
+         {
+             var logoutUri = $"https://{builder.Configuration["Auth0:Domain"]}/v2/logout?client_id={builder.Configuration["Auth0:ClientId"]}";
 
-    // Lockout settings.
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
-    options.Lockout.MaxFailedAccessAttempts = 5;
-    options.Lockout.AllowedForNewUsers = true;
+             var postLogoutUri = context.Properties.RedirectUri;
+             if (!string.IsNullOrEmpty(postLogoutUri))
+             {
+                 if (postLogoutUri.StartsWith("/"))
+                 {
+                     // transform to absolute
+                     var request = context.Request;
+                     postLogoutUri = request.Scheme + "://" + request.Host + request.PathBase + postLogoutUri;
+                 }
+                 logoutUri += $"&returnTo={ Uri.EscapeDataString(postLogoutUri)}";
+             }
 
-    // User settings.
-    options.User.AllowedUserNameCharacters =
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
-    options.User.RequireUniqueEmail = false;
-});
+             context.Response.Redirect(logoutUri);
+             context.HandleResponse();
 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    // Cookie settings
-    options.Cookie.HttpOnly = true;
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+             return Task.CompletedTask;
+         },
+        OnRedirectToIdentityProvider = context =>
+        {
+            context.ProtocolMessage.SetParameter("audience", builder.Configuration["Auth0:ApiAudience"]);
+            return Task.FromResult(0);
+        }
 
-    options.LoginPath = "/login";
-    options.AccessDeniedPath = "/AccessDenied";
-    options.SlidingExpiration = true;
-});
+     };
+ });
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -131,7 +155,7 @@ builder.Services.AddSwaggerGen(c =>
                     {basicSecurityScheme, new string[] { }}
                 });
 });
-        
+
 
 
 var app = builder.Build();
