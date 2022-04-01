@@ -1,3 +1,4 @@
+using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -36,23 +37,20 @@ namespace WireguardAdminClient
             services.AddScoped<IWireguardService, WireguardService>();
             services.AddControllers();
 
-            services.AddAuthentication(options =>
-            {
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-            })
-            .AddCookie()
-            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
-            {
-                options.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";
-                options.ClientSecret = "8PRENu0lnO9Ck-7INd81bg3l";
-                options.SignInScheme = IdentityConstants.ExternalScheme;
-                options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+
+
+            services.AddAuth0WebAppAuthentication(options => {
+                options.Domain = Configuration["Auth0:Domain"];
+                options.ClientId = Configuration["Auth0:ClientId"];
             });
+
+            services.AddControllersWithViews();
 
             services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromMinutes(2);//You can set Time   
+                options.IdleTimeout = TimeSpan.FromSeconds(60);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
             });
 
 

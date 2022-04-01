@@ -51,7 +51,17 @@
             <button class="btn btn-primary" type="submit">Log In</button>
         </form>
 
-         <a class="nav-link text-dark"  asp-controller="Account" asp-action="ExternalLogin">Login With Google</a>
+         @*<a class="nav-link text-dark"  asp-controller="Account" asp-action="ExternalLogin">Login With Google</a>*@
+
+         <a href="https://maksad-dev.us.auth0.com/authorize?
+              response_type=code&
+              client_id=9VjQfhrZAZgFeTYbZwbNDvSvTgMtDC2M&
+              redirect_uri=https://localhost:5001/index&
+              scope=appointments%20contacts&
+              audience=https://maksad-dev.us.auth0.com/api/v2/&
+              state=xyzABC123">
+              Sign In
+        </a>
 
     </div>
 </body>

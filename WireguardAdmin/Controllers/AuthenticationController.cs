@@ -26,6 +26,7 @@ using System.Text;
 using WireguardAdmin.Models.Users;
 using Microsoft.AspNetCore.Authentication.Google;
 using Auth0.AspNetCore.Authentication;
+using RestSharp;
 
 namespace WireguardAdmin.Controllers
 {
@@ -62,6 +63,12 @@ namespace WireguardAdmin.Controllers
                 .Build();
 
             await HttpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+
+            var client = new RestClient("https://maksad-dev.us.auth0.com/oauth/token");
+            var request = new RestRequest("POST");
+            request.AddHeader("content-type", "application/x-www-form-urlencoded");
+            request.AddParameter("application/x-www-form-urlencoded", $"grant_type=authorization_code&client_id=%24%7Baccount.clientId%7D&client_secret=${_configuration["Auth0:ClientSecret"]}&code=YOUR_AUTHORIZATION_CODE&redirect_uri=%24%7Baccount.callback%7D", ParameterType.RequestBody);
+            RestResponse response = await client.ExecuteAsync(request);
         }
 
         [Authorize]
@@ -93,79 +100,7 @@ namespace WireguardAdmin.Controllers
             });
         }
 
-       /* [Route("google-response")]
-        [HttpGet]
-        public async Task<IActionResult>
-            ExternalLoginCallback(string returnUrl = null, string remoteError = null)
-        {
-            returnUrl = returnUrl ?? Url.Content("~/");
-
-       *//*     LogInViewModel loginViewModel = new LogInViewModel
-            {
-                ReturnUrl = returnUrl,
-                ExternalLogins =
-                        (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList()
-            };*//*
-
-            if (remoteError != null)
-            {
-               *//* ModelState
-                    .AddModelError(string.Empty, $"Error from external provider: {remoteError}");*//*
-
-                return BadRequest("Error");
-            }
-
-            // Get the login information about the user from the external login provider
-            var info = await _signInManager.GetExternalLoginInfoAsync();
-            if (info == null)
-            {
-                return BadRequest("Another error");
-            }
-
-            // If the user already has a login (i.e if there is a record in AspNetUserLogins
-            // table) then sign-in the user with this external login provider
-            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider,
-                info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
-
-            if (signInResult.Succeeded)
-            {
-                return LocalRedirect(returnUrl);
-            }
-            // If there is no record in AspNetUserLogins table, the user may not have
-            // a local account
-            else
-            {
-                // Get the email claim value
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-
-                if (email != null)
-                {
-                    // Create a new user without password if we do not have a user already
-                    var user = await _userManager.FindByEmailAsync(email);
-
-                    if (user == null)
-                    {
-                        user = new WireguardUser
-                        {
-                            UserName = info.Principal.FindFirstValue(ClaimTypes.Email),
-                            Email = info.Principal.FindFirstValue(ClaimTypes.Email)
-                        };
-
-                        await _userManager.CreateAsync(user);
-                    }
-
-                    // Add a login (i.e insert a row for the user in AspNetUserLogins table)
-                    await _userManager.AddLoginAsync(user, info);
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-
-                    return LocalRedirect(returnUrl);
-                }
-
-                return BadRequest($"Email claim not received from: {info.LoginProvider}");
-            }
-        }*/
-
-        /*[HttpPost]
+        [HttpPost]
         [AllowAnonymous]
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
@@ -197,7 +132,7 @@ namespace WireguardAdmin.Controllers
             }
 
             return Unauthorized();
-        }*/
+        }
 
         [HttpPost]
         [AllowAnonymous]
@@ -273,80 +208,5 @@ namespace WireguardAdmin.Controllers
             return token;
         }
     }
-
-    /*[HttpGet]
-    [Route("{Scheme}")]
-    public async Task Get([FromRoute] string scheme)
-    {
-        const string callbackScheme = "xamarinessentials";
-
-        var auth = await Request.HttpContext.AuthenticateAsync(scheme);
-
-        if (!auth.Succeeded
-            || auth?.Principal == null
-            || !auth.Principal.Identities.Any(id => id.IsAuthenticated)
-            || string.IsNullOrEmpty(auth.Properties.GetTokenValue("access_token")))
-        {
-            // Not authenticated, challenge
-            await Request.HttpContext.ChallengeAsync(scheme);
-        }
-        else
-        {
-            var claims = auth.Principal.Identities.FirstOrDefault()?.Claims;
-
-
-
-            var username = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Name)?.Value;
-            var id = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var firstname = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GivenName)?.Value;
-            var lastname = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Surname)?.Value;
-            var email = claims?.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Email)?.Value;
-
-
-            var userExist = await userManager.FindByEmailAsync(email);
-
-            if (userExist == null)
-            {
-                ApiUser user = new ApiUser
-                {
-                    Id = id,
-                    Email = email,
-                    SecurityStamp = Guid.NewGuid().ToString(),
-                    UserName = username.Replace(" ", "").ToLower()
-                };
-
-                var result = await userManager.CreateAsync(user);
-
-                if (!result.Succeeded)
-                {
-                    Console.WriteLine(result);
-                }
-
-            }
-
-
-
-            // Get parameters to send back to the callback
-            var qs = new Dictionary<string, string>
-            {
-                { "access_token", auth.Properties.GetTokenValue("access_token") },
-                { "refresh_token", auth.Properties.GetTokenValue("refresh_token") ?? string.Empty },
-                { "expires", (auth.Properties.ExpiresUtc?.ToUnixTimeSeconds() ?? -1).ToString() },
-                { "email", email },
-                {"id", id }
-            };
-
-            // Build the result url
-            var url = callbackScheme + "://#" + string.Join(
-                "&",
-                qs.Where(kvp => !string.IsNullOrEmpty(kvp.Value) && kvp.Value != "-1")
-                .Select(kvp => $"{WebUtility.UrlEncode(kvp.Key)}={WebUtility.UrlEncode(kvp.Value)}"));
-
-            // Redirect to final url
-            Request.HttpContext.Response.Redirect(url);
-        }
-
-    }*/
-
 }
 
