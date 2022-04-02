@@ -1,0 +1,77 @@
+version: "3.7"
+
+networks:
+  dockerapi-dev:
+    driver: bridge #by defult
+
+services:
+    wireguard_admin:
+        container_name: 'wireguard_admin'
+        image: wireguard_admin:latest
+        depends_on:
+          - "identitydb"
+        build:
+          context: ./WireguardAdmin
+          dockerfile: Dockerfile
+        #ports:
+          #- "80:80"     
+        environment:
+          ASPNETCORE_ENVIRONMENT: Production
+        networks:
+          - dockerapi-dev
+    wireguard_admin_client:
+        container_name: 'wireguard_admin_client'
+        image: wireguard_admin_client:latest
+        build:
+          context: ./WireguardAdminClient
+          dockerfile: Dockerfile
+        #ports:
+          #- "80:80"     
+        environment:
+          ASPNETCORE_ENVIRONMENT: Production
+        networks:
+          - dockerapi-dev
+
+    identitydb:
+        container_name: 'identitydb'
+        image: postgres:latest
+        ports:
+            - "5434:5432"
+        volumes:
+            - identitydb_volume:/var/lib/postgresql/data
+        #  - ./dbscripts/seed.sql :/docker-entrypoint-initdb.d/seed.sql
+        environment:
+            POSTGRES_USER: identity_user
+            POSTGRES_PASSWORD: Youcannothackthispassword
+        networks:
+            - dockerapi-dev
+    swag:
+        image: ghcr.io/linuxserver/swag
+        container_name: swag
+        cap_add:
+          - NET_ADMIN
+        environment:
+          - PUID=1000
+          - PGID=1000
+          - TZ=America/Denver
+          - URL=admin.maksadannamuradov.com
+          #- SUBDOMAINS=admin
+          - VALIDATION=http
+          - EXTRA_DOMAINS=client.maksadannamuradov.com #optional
+          - STAGING=false
+        volumes:
+          - /swag:/config
+          - ./default.conf:/config/nginx/site-confs/default
+        ports:
+          - 443:443
+          - 80:80
+        depends_on:
+          - identitydb
+          - wireguard_admin
+        networks:
+            - dockerapi-dev
+        restart: unless-stopped
+        extra_hosts:
+            - host.docker.internal:host-gateway
+volumes:
+    identitydb_volume:
