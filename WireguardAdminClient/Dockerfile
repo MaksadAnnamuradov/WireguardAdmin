@@ -1,19 +1,22 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+WORKDIR /src
+COPY ["WireguardAdminClient/WireguardAdminClient.csproj", "WireguardAdminClient/"]
+RUN dotnet restore "WireguardAdminClient/WireguardAdminClient.csproj"
+COPY . .
+WORKDIR "/src/WireguardAdminClient"
+RUN dotnet build "WireguardAdminClient.csproj" -c Release -o /app/build
 
+FROM build AS publish
+RUN dotnet publish "WireguardAdminClient.csproj" -c Release -o /app/publish
+
+FROM base AS final
 WORKDIR /app
-
-COPY *.csproj ./
-RUN dotnet restore WireguardAdminClient.csproj
-
-COPY . ./
-RUN dotnet publish WireguardAdminClient.csproj -c Release -o out
-
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
-
-WORKDIR /app
-
-COPY --from=build /app/out .
-
-ENTRYPOINT ["dotnet", "WireguardAdminClient.dll", "--urls=http://0.0.0.0:5003"]
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "WireguardAdminClient.dll"]
