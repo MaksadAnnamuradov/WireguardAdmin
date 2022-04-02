@@ -43,6 +43,13 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 })
  .AddCookie()
+
+.AddGoogle(g =>
+{
+    g.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";
+    g.ClientSecret = "8PRENu0lnO9Ck-7INd81bg3l";
+    g.SaveTokens = true;
+})
  .AddOpenIdConnect("Auth0", options =>
  {
      options.Authority = $"https://{builder.Configuration["Auth0:Domain"]}";
