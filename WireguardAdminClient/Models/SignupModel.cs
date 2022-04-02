@@ -11,7 +11,7 @@ namespace WireguardAdminClient.Models
         [Required]
         [Display(Name = "UserName")]
         [StringLength(100, ErrorMessage = "{0} must be at least {2} characters long.", MinimumLength = 2)]
-        public string Username { get; set; }
+        public string UserName { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
@@ -26,6 +26,9 @@ namespace WireguardAdminClient.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The passwords do not match.")]
         public string ConfirmPassword { get; set; }
+
+        [DataType(DataType.EmailAddress)]
+        public string Email { get; set; }
 
         public DateTime BirthDate { get; set; }
 

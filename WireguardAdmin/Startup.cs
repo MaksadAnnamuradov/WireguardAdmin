@@ -26,6 +26,8 @@ builder.Services.AddTransient<IAdminRepository, AdminRepository>();
 builder.Services.AddTransient<IWireguardService, WireguardService>();
 builder.Services.AddControllers();
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 //For Identity
 builder.Services.AddIdentity<WireguardUser, IdentityRole>(options =>
 {

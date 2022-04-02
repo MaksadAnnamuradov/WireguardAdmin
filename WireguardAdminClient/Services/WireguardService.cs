@@ -15,17 +15,17 @@ namespace WireguardAdminClient.Services
         {
             wireguardService = RestService.For<IWireguardService>("https://localhost:5001");
         }
-        public async Task SignupUser(SignupModel signupModel)
+        public async Task<Response> SignupUser(SignupModelDto signupModel)
         {
-            await wireguardService.SignupUser(signupModel);
+            return await wireguardService.SignupUser(signupModel);
         }
-        public async Task LoginUser(Login loginModel)
+        public async Task<LoginResponse> LoginUser(Login loginModel)
         {
-            await wireguardService.LoginUser(loginModel);
+            return await wireguardService.LoginUser(loginModel);
         }
-        public async Task ExternalLogin()
+        public async Task<IActionResult> ExternalLogin(string scheme)
         {
-            await wireguardService.ExternalLogin();
+            return await wireguardService.ExternalLogin(scheme);
         }
         public async Task Profile()
         {

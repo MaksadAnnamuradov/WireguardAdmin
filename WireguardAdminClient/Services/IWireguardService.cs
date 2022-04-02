@@ -11,13 +11,13 @@ namespace WireguardAdminClient.Services
     {
 
         [Post("/api/authentication/signup")]
-        Task SignupUser([Body] SignupModel signupModel);
+        Task<Response> SignupUser([Body] SignupModelDto signupModel);
 
         [Post("/api/authentication/login")]
-        Task LoginUser([Body] Login loginModel);
+        Task<LoginResponse> LoginUser([Body] Login loginModel);
 
-        [Get("/api/authentication/google-login")]
-        Task ExternalLogin();
+        [Get("/api/authentication/{scheme}")]
+        Task<IActionResult> ExternalLogin(string scheme);
 
         [Get("/api/profile")]
         [Headers("Authorization: Bearer")]

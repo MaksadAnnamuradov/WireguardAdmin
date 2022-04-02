@@ -52,7 +52,7 @@ namespace WireguardAdmin.Controllers
         [AllowAnonymous]
         [HttpGet]
         [Route("AuthLogin")]
-        public async Task Login(string returnUrl = "/")
+        public async Task Login()
         {
             var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
                 // Indicate here where Auth0 should redirect the user after a login.
@@ -66,7 +66,7 @@ namespace WireguardAdmin.Controllers
 
         [Authorize]
         [HttpGet]
-        [Route("Logout")]
+        [Route("AuthLogout")]
         public async Task Logout()
         {
             var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
@@ -120,8 +120,8 @@ namespace WireguardAdmin.Controllers
 
                 return Ok(new
                 {
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    Expiration = token.ValidTo
                 });
             }
 
@@ -133,31 +133,48 @@ namespace WireguardAdmin.Controllers
         [Route("signup")]
         public async Task<IActionResult> Signup([FromBody] SignupModel model)
         {
-            var userExists = await _userManager.FindByNameAsync(model.Username);
-            if (userExists != null)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
-
-            WireguardUser user = new()
+            if (ModelState.IsValid)
             {
-                Email = model.Email,
-                SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = model.Username,
-                ProfileDescription = model.ProfileDescription,
-                BirthDate = model.BirthDate,
-                FavoritePet = model.FavoritePet,
-            };
-            var result = await _userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+                var userExists = await _userManager.FindByNameAsync(model.UserName);
+                if (userExists != null)
+                    return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
 
-            return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+                WireguardUser user = new()
+                {
+                    Email = model.Email,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    UserName = model.UserName,
+                    ProfileDescription = model.ProfileDescription,
+                    BirthDate = model.BirthDate,
+                    FavoritePet = model.FavoritePet,
+                };
+
+                try
+                {
+                    var result = await _userManager.CreateAsync(user, model.Password);
+                    if (!result.Succeeded)
+                        return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+                }
+                catch (Exception e)
+                {
+
+                    Console.WriteLine(e);
+                }
+
+                return Ok(new Response { Status = "Success", Message = "User created successfully!" });
+            }
+            else
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." });
+            }
+
         }
 
         [HttpPost]
         [Route("register-admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] SignupModel model)
         {
-            var userExists = await _userManager.FindByNameAsync(model.Username);
+            var userExists = await _userManager.FindByNameAsync(model.UserName);
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
 
@@ -165,7 +182,7 @@ namespace WireguardAdmin.Controllers
             {
                 Email = model.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = model.Username
+                UserName = model.UserName
             };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
@@ -264,10 +281,10 @@ namespace WireguardAdmin.Controllers
                 };
 
                 // Build the result url
-             
+
 
                 // Redirect to final url
-                Request.HttpContext.Response.Redirect("https://localhost:5001");
+                Request.HttpContext.Response.Redirect("https://localhost:5003");
             }
 
         }

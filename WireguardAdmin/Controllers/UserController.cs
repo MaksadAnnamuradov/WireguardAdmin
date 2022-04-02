@@ -33,7 +33,7 @@ namespace WireguardAdmin.Controllers
         }
 
         [HttpGet("getall")]
-        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize]
         public async Task<IEnumerable<WireguardUser>> GetAllUsers()
         {
             _logger.LogDebug("Attempted to get all users");

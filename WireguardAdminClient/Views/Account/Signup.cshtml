@@ -18,9 +18,14 @@
 
         <form asp-action="Signup" asp-controller="Account" method="post">
             <div class="form-group">
-                <label asp-for="Username"></label>
-                <div asp-validation-for="Username" class="text-danger"></div>
-                <input asp-for="Username" class="form-control" />
+                <label asp-for="UserName"></label>
+                <div asp-validation-for="UserName" class="text-danger"></div>
+                <input asp-for="UserName" class="form-control" />
+            </div>
+             <div class="form-group">
+                <label asp-for="Email"></label>
+                <div asp-validation-for="Email" class="text-danger"></div>
+                <input asp-for="Email" type="email" class="form-control" />
             </div>
             <div class="form-group">
                 <label asp-for="Password"></label>
