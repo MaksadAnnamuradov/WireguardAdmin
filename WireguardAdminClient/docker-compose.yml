@@ -52,7 +52,7 @@ services:
           - 80:80
         depends_on:
           - identitydb
-          - wireguard_admin
+          - wireguard_admin_client
         networks:
             - dockerapi-dev
         restart: unless-stopped
