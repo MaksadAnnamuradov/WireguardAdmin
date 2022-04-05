@@ -8,10 +8,10 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /app
 
 COPY *.csproj ./
-RUN dotnet restore WireguardAdmin.csproj
+RUN dotnet restore WireguardAdminClient.csproj
 
 COPY . ./
-RUN dotnet publish WireguardAdmin.csproj -c Release -o out
+RUN dotnet publish WireguardAdminClient.csproj -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 
