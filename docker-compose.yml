@@ -6,7 +6,7 @@ networks:
 
 services:
     wireguard_admin:
-        container_name: 'wireguard_admin'
+        container_name: wireguard_admin
         image: wireguard_admin:latest
         depends_on:
           - "identitydb"
@@ -20,7 +20,7 @@ services:
         networks:
           - dockerapi-dev
     wireguard_admin_client:
-        container_name: 'wireguard_admin_client'
+        container_name: wireguard_admin_client
         image: wireguard_admin_client:latest
         build:
           context: ./WireguardAdminClient
