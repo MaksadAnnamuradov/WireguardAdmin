@@ -5,6 +5,8 @@ WireguardClient:
  - Login users (Google)
  - See user details
  - Secure user details behind the authentication and authorization
+
+
 WireguardApi:
  - Talks to Wireguard client in Linode VM
  - Authenticate and Authorize users
