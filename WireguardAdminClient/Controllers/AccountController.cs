@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using WireguardAdminClient.Services;
 using Microsoft.AspNetCore.Authentication.Google;
+using System.IO;
 
 namespace WireguardAdmin.Controllers
 {
@@ -137,6 +138,44 @@ namespace WireguardAdmin.Controllers
 
             ModelState.AddModelError("", "Invalid name or password");
             return View("Index");
+        }
+
+        public IActionResult UploadFile()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult UploadFile(IFormFile files)
+        {
+            if (files != null)
+            {
+                if (files.Length > 0)
+                {
+                    //Getting FileName
+                    var fileName = Path.GetFileName(files.FileName);
+                    //Getting file Extension
+                    var fileExtension = Path.GetExtension(fileName);
+                    // concatenating  FileName + FileExtension
+                    var newFileName = String.Concat(Convert.ToString(Guid.NewGuid()), fileExtension);
+
+                    var objfiles = new UploadFile()
+                    {
+                        DocumentId = 0,
+                        Name = newFileName,
+                        FileType = fileExtension,
+                        CreatedOn = DateTime.Now
+                    };
+
+                    using (var target = new MemoryStream())
+                    {
+                        files.CopyTo(target);
+                        objfiles.DataFiles = target.ToArray();
+                    }
+
+                }
+            }
+            return View();
         }
 
 

@@ -34,5 +34,7 @@ namespace WireguardAdminClient.Models
 
         public string ProfileDescription { get; set; }
         public string FavoritePet { get; set; }
+
+        //public UploadFile files { get; set; }
     }
 }
