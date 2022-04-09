@@ -7,9 +7,11 @@ namespace WireguardAdminClient.Models
 {
     public class UserModel
     {
-        public int UserId { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string Role { get; set; }
+        public string UserName { get; set; }
+        public string Email { get; set; }
+        public DateTime BirthDate { get; set; }
+        public string ProfileDescription { get; set; }
+        public string FavoritePet { get; set; }
+        public UploadFile ProfileImage { get; set; } //Stored as byte array in the database.
     }
 }

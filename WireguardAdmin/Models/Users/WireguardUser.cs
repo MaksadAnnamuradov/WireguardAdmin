@@ -12,6 +12,7 @@ namespace WireguardAdmin.Models
         public string FavoritePet { get; set; }
         public DateTime BirthDate { get; set; }
         public string RefreshToken { get; internal set; }
+        public UploadFile ProfileImage { get; set; }
 
     }
 }

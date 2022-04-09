@@ -15,5 +15,6 @@ namespace WireguardAdminClient.Models
         public DateTime BirthDate { get; set; }
         public string ProfileDescription { get; set; }
         public string FavoritePet { get; set; }
+        public UploadFile ProfileImage { get; set; }
     }
 }

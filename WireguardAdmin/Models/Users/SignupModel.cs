@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using WireguardAdmin.Models;
 
 namespace WireguardAdminClient.Models
 {
@@ -27,5 +28,6 @@ namespace WireguardAdminClient.Models
         public DateTime BirthDate { get; set; }
         public string ProfileDescription { get; set; }
         public string FavoritePet { get; set; }
+        public UploadFile ProfileImage { get; set; }
     }
 }

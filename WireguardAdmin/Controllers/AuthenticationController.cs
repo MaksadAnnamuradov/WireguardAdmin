@@ -171,6 +171,7 @@ namespace WireguardAdmin.Controllers
                     ProfileDescription = model.ProfileDescription,
                     BirthDate = model.BirthDate,
                     FavoritePet = model.FavoritePet,
+                    ProfileImage = model.ProfileImage
                 };
 
                 try

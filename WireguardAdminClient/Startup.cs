@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,23 +35,31 @@ namespace WireguardAdminClient
             services.AddControllersWithViews();
             services.AddRazorPages();
             services.AddScoped<IWireguardService, WireguardService>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddScoped<WireguardService>();
             services.AddControllers();
-
-            services.AddDistributedMemoryCache();
-
-            services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromSeconds(10);
-                options.Cookie.HttpOnly = true;
-                options.Cookie.IsEssential = true;
-            });
 
             services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
             })
-            .AddCookie()
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+            {
+                int minute = 60;
+                int hour = minute * 60;
+                int day = hour * 24;
+                int week = day * 7;
+                int year = 365 * day;
+
+                options.LoginPath = "/account/login";
+                options.AccessDeniedPath = "/auth/accessdenied";
+                options.Cookie.IsEssential = true;
+                options.SlidingExpiration = true;
+                options.ExpireTimeSpan = TimeSpan.FromSeconds(day / 2);
+
+                options.Cookie.Name = "access_token";
+            })
             .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
             {
                 options.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";

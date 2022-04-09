@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WireguardAdminClient.Models
 {
-    public class User
+    public class VpnUser
     {
         [Key]
         public string ID { get; set; }

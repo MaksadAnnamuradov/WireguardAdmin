@@ -50,10 +50,7 @@ namespace WireguardAdmin.Controllers
 
                     var token = response.Token;
 
-                    if (string.IsNullOrEmpty(HttpContext.Session.GetString("token")))
-                    {
-                        HttpContext.Session.SetString("token", token);
-                    }
+                    HttpContext.Response.Cookies.Append("access_token", token, new CookieOptions { HttpOnly = true, Secure = true });
 
                     return RedirectToPage("/Account/Index");
 
@@ -111,6 +108,38 @@ namespace WireguardAdmin.Controllers
         {
             if (ModelState.IsValid)
             {
+
+                var objfiles = new UploadFile();
+                var files = signupModel.ProfileImage;
+
+                if (signupModel.ProfileImage != null)
+                {
+                    if (files.Length > 0)
+                    {
+                        //Getting FileName
+                        var fileName = Path.GetFileName(files.FileName);
+                        //Getting file Extension
+                        var fileExtension = Path.GetExtension(fileName);
+                        // concatenating  FileName + FileExtension
+                        var newFileName = String.Concat(Convert.ToString(Guid.NewGuid()), fileExtension);
+
+                        objfiles = new UploadFile()
+                        {
+                            DocumentId = 0,
+                            Name = newFileName,
+                            FileType = fileExtension,
+                            CreatedOn = DateTime.Now
+                        };
+
+                        using (var target = new MemoryStream())
+                        {
+                            files.CopyTo(target);
+                            objfiles.DataFiles = target.ToArray();
+                        }
+
+                    }
+                }
+
                 SignupModelDto signupModelDto = new SignupModelDto()
                 {
                     Email = signupModel.Email,
@@ -119,7 +148,10 @@ namespace WireguardAdmin.Controllers
                     BirthDate = signupModel.BirthDate,
                     FavoritePet = signupModel.FavoritePet,
                     Password = signupModel.Password,
+                    ProfileImage = objfiles
                 };
+
+                
 
                 var response = await wireguardService.SignupUser(signupModelDto);
 
@@ -146,7 +178,7 @@ namespace WireguardAdmin.Controllers
                 /* await GenereateNewClientConf(newClient);
                  await UpdateServerFile(newClient);*/
 
-                User user = new()
+                VpnUser user = new()
                 {
                     ID = Guid.NewGuid().ToString(),
                     Name = newClient.Name,

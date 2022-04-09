@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Refit;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -6,15 +7,25 @@ using WireguardAdminClient.Models;
 
 namespace WireguardAdminClient.Services
 {
-    public class WireguardService: IWireguardService
+    public class WireguardService : IWireguardService
     {
 
         private readonly IWireguardService wireguardService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private string token = "";
 
-        public WireguardService()
+
+        public WireguardService(IHttpContextAccessor httpContextAccessor)
         {
-            wireguardService = RestService.For<IWireguardService>("https://localhost:5001");
+            wireguardService = RestService.For<IWireguardService>("https://localhost:5001", new RefitSettings()
+            {
+                AuthorizationHeaderValueGetter = () =>
+                    Task.FromResult(token)
+            });
+
+            _httpContextAccessor = httpContextAccessor;
         }
+
         public async Task<Response> SignupUser(SignupModelDto signupModel)
         {
             return await wireguardService.SignupUser(signupModel);
@@ -31,5 +42,8 @@ namespace WireguardAdminClient.Services
         {
             await wireguardService.Profile();
         }
+
     }
+
 }
+
