@@ -26,6 +26,7 @@ using System.Text;
 using WireguardAdmin.Models.Users;
 using Microsoft.AspNetCore.Authentication.Google;
 using Auth0.AspNetCore.Authentication;
+using WireguardAdmin.Infrastructure;
 
 namespace WireguardAdmin.Controllers
 {
@@ -36,51 +37,54 @@ namespace WireguardAdmin.Controllers
         private readonly UserManager<WireguardUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<WireguardUser> _signInManager;
+        private readonly JwtTokenCreator _jwtCreator;
         private readonly IConfiguration _configuration;
 
         public AuthenticationController(
             UserManager<WireguardUser> userManager,
             RoleManager<IdentityRole> roleManager,
             SignInManager<WireguardUser> signInManager,
+            JwtTokenCreator jwtCreator,
             IConfiguration configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
+            _jwtCreator = jwtCreator;
             _configuration = configuration;
         }
-        [AllowAnonymous]
-        [HttpGet]
-        [Route("AuthLogin")]
-        public async Task Login()
-        {
-            var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
-                // Indicate here where Auth0 should redirect the user after a login.
-                // Note that the resulting absolute Uri must be added to the
-                // **Allowed Callback URLs** settings for the app.
-                .WithRedirectUri("https://localhost:5003")
-                .Build();
+        /*  [AllowAnonymous]
+          [HttpGet]
+          [Route("AuthLogin")]
+          public async Task Login()
+          {
+              var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
+                  // Indicate here where Auth0 should redirect the user after a login.
+                  // Note that the resulting absolute Uri must be added to the
+                  // **Allowed Callback URLs** settings for the app.
+                  .WithRedirectUri("https://localhost:5003")
+                  .Build();
 
-            await HttpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
-        }
+              await HttpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+          }
 
-        [Authorize]
-        [HttpGet]
-        [Route("AuthLogout")]
-        public async Task Logout()
-        {
-            var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-                // Indicate here where Auth0 should redirect the user after a logout.
-                // Note that the resulting absolute Uri must be added to the
-                // **Allowed Logout URLs** settings for the app.
-                .WithRedirectUri(Url.Action("Index", "Home"))
-                .Build();
+          [Authorize]
+          [HttpGet]
+          [Route("AuthLogout")]
+          public async Task Logout()
+          {
+              var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
+                  // Indicate here where Auth0 should redirect the user after a logout.
+                  // Note that the resulting absolute Uri must be added to the
+                  // **Allowed Logout URLs** settings for the app.
+                  .WithRedirectUri(Url.Action("Index", "Home"))
+                  .Build();
 
-            await HttpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        }
+              await HttpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+              await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+          }*/
 
-        [Authorize]
+        /*[Authorize]
         [HttpGet]
         [Route("Profile")]
         public IActionResult Profile()
@@ -92,7 +96,7 @@ namespace WireguardAdmin.Controllers
                 ProfileImage = User.Claims.FirstOrDefault(c => c.Type == "picture")?.Value
             });
         }
-
+*/
 
         [HttpPost]
         [AllowAnonymous]
@@ -103,26 +107,46 @@ namespace WireguardAdmin.Controllers
 
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var userRoles = await _userManager.GetRolesAsync(user);
+                /* var userRoles = await _userManager.GetRolesAsync(user);
 
-                var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                };
+                 var authClaims = new List<Claim>
+                 {
+                     new Claim(ClaimTypes.Name, user.UserName),
+                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                 };
 
-                foreach (var userRole in userRoles)
-                {
-                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                }
+                 foreach (var userRole in userRoles)
+                 {
+                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                 }
 
-                var token = GetToken(authClaims);
+                 var token = GetToken(authClaims);
+
+                 return Ok(new
+                 {
+                     Token = new JwtSecurityTokenHandler().WriteToken(token),
+                     Expiration = token.ValidTo
+                 });*/
+
+                var token = _jwtCreator.Generate(user.Email, user.Id);
+
+                user.RefreshToken = Guid.NewGuid().ToString();
+
+                await _userManager.UpdateAsync(user);
+
+                /*Response.Cookies.Append("X-Access-Token", token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
+                Response.Cookies.Append("X-Username", user.UserName, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
+                Response.Cookies.Append("X-Refresh-Token", user.RefreshToken, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });*/
 
                 return Ok(new
                 {
-                    Token = new JwtSecurityTokenHandler().WriteToken(token),
-                    Expiration = token.ValidTo
-                });
+                    Token = token,
+                    Username = user.UserName,
+                    RefreshToken = user.RefreshToken,
+                }
+
+                    );
+
             }
 
             return Unauthorized();

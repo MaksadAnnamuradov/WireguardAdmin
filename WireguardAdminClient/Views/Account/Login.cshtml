@@ -28,7 +28,7 @@
         @Html.HiddenFor(x => x.ReturnUrl)
 
         <form asp-action="Login" method="post" asp-controller="Account">
-            <input type="hidden" asp-for="ReturnUrl" />
+           @* <input type="hidden" asp-for="ReturnUrl" />*@
             <div class="form-group">
                 <label asp-for="Username"></label>
                 <div asp-validation-for="Username" class="text-danger"></div>
@@ -51,7 +51,7 @@
             <button class="btn btn-primary" type="submit">Log In</button>
         </form>
 
-         <a class="nav-link text-dark"  asp-controller="Account" asp-action="GoogleLogin">Login With Google</a>
+        @*<a class="nav-link text-dark"  asp-controller="Account" asp-action="GoogleLogin">Login With Google</a>*@
 
     </div>
 </body>

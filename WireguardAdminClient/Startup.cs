@@ -36,6 +36,15 @@ namespace WireguardAdminClient
             services.AddScoped<IWireguardService, WireguardService>();
             services.AddControllers();
 
+            services.AddDistributedMemoryCache();
+
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromSeconds(10);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            });
+
             services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
@@ -76,6 +85,8 @@ namespace WireguardAdminClient
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseSession();
 
             app.UseAuthorization();
             app.UseAuthentication();

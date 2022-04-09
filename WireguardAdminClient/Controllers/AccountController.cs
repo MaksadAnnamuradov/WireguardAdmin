@@ -17,7 +17,7 @@ using Microsoft.AspNetCore.Authentication;
 using WireguardAdminClient.Services;
 using Microsoft.AspNetCore.Authentication.Google;
 using System.IO;
-
+using Microsoft.AspNetCore.Http;
 namespace WireguardAdmin.Controllers
 {
     public class AccountController : Controller
@@ -43,19 +43,42 @@ namespace WireguardAdmin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var response = await wireguardService.LoginUser(loginModel);
-                return RedirectToPage("/Account/Index");
+                try
+                {
+
+                    var response = await wireguardService.LoginUser(loginModel);
+
+                    var token = response.Token;
+
+                    if (string.IsNullOrEmpty(HttpContext.Session.GetString("token")))
+                    {
+                        HttpContext.Session.SetString("token", token);
+                    }
+
+                    return RedirectToPage("/Account/Index");
+
+                }
+                catch (Exception)
+                {
+
+                    ModelState.AddModelError("", "Invalid name or password");
+                    return View(loginModel);
+                }
             }
-            ModelState.AddModelError("", "Invalid name or password");
-            return View(loginModel);
+            else
+            {
+                return View(loginModel);
+
+            }
+
         }
 
-        [HttpGet]
-        public async Task GoogleLogin(string scheme="Google")
-        {
-    
-            Redirect("https://localhost:5001/api/Authentication/Google");
-        }
+        /* [HttpGet]
+         public async Task GoogleLogin(string scheme="Google")
+         {
+
+             Redirect("https://localhost:5001/api/Authentication/Google");
+         }*/
 
 
         public async Task<IActionResult> Index()
@@ -99,10 +122,10 @@ namespace WireguardAdmin.Controllers
                 };
 
                 var response = await wireguardService.SignupUser(signupModelDto);
-                
-                if(response.Status == "Success")
+
+                if (response.Status == "Success")
                 {
-                    return RedirectToAction("Index");
+                    return RedirectToAction("Login");
                 }
                 else
                 {
