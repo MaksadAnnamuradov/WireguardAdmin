@@ -120,22 +120,33 @@ namespace WireguardAdmin.Controllers
                         var fileName = Path.GetFileName(files.FileName);
                         //Getting file Extension
                         var fileExtension = Path.GetExtension(fileName);
-                        // concatenating  FileName + FileExtension
-                        var newFileName = String.Concat(Convert.ToString(Guid.NewGuid()), fileExtension);
 
-                        objfiles = new UploadFile()
+                        if(fileExtension == "jpg" || fileExtension == "png" || fileExtension == "jpeg")
                         {
-                            DocumentId = 0,
-                            Name = newFileName,
-                            FileType = fileExtension,
-                            CreatedOn = DateTime.Now
-                        };
+                            // concatenating  FileName + FileExtension
+                            var newFileName = String.Concat(Convert.ToString(Guid.NewGuid()), fileExtension);
 
-                        using (var target = new MemoryStream())
-                        {
-                            files.CopyTo(target);
-                            objfiles.DataFiles = target.ToArray();
+                            objfiles = new UploadFile()
+                            {
+                                DocumentId = 0,
+                                Name = newFileName,
+                                FileType = fileExtension,
+                                CreatedOn = DateTime.Now
+                            };
+
+                            using (var target = new MemoryStream())
+                            {
+                                files.CopyTo(target);
+                                objfiles.DataFiles = target.ToArray();
+                            }
+
                         }
+                        else
+                        {
+                            ModelState.AddModelError("", "Invalid file type");
+                            return View("Signup");
+                        }
+                       
 
                     }
                 }
