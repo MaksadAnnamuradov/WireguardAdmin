@@ -42,7 +42,7 @@ services:
           - URL=admin.maksadannamuradov.com
           #- SUBDOMAINS=admin
           - VALIDATION=http
-          - EXTRA_DOMAINS=client.maksadannamuradov.com #optional
+          - EXTRA_DOMAINS=client.maksadannamuradov.com, maksadannamuradov.com #optional
           - STAGING=true
         volumes:
           - /swag:/config
