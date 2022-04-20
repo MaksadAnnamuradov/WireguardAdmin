@@ -121,7 +121,7 @@ namespace WireguardAdmin.Controllers
                         //Getting file Extension
                         var fileExtension = Path.GetExtension(fileName);
 
-                        if(fileExtension == "jpg" || fileExtension == "png" || fileExtension == "jpeg")
+                        if(fileExtension == ".jpg" || fileExtension == ".png" || fileExtension == ".jpeg")
                         {
                             // concatenating  FileName + FileExtension
                             var newFileName = String.Concat(Convert.ToString(Guid.NewGuid()), fileExtension);

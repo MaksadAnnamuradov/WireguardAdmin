@@ -162,7 +162,7 @@ namespace WireguardAdmin.Controllers
                 var userExists = await _userManager.FindByNameAsync(model.UserName);
                 if (userExists != null)
                     return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "User already exists!" });
-                if(model.ProfileImage.FileType != "png" || model.ProfileImage.FileType != "jpg" || model.ProfileImage.FileType != "jpeg")
+                if(model.ProfileImage.FileType != ".png" || model.ProfileImage.FileType != ".jpg" || model.ProfileImage.FileType != ".jpeg")
                 {
                     return StatusCode(StatusCodes.Status500InternalServerError, new Response { Status = "Error", Message = "Invalid file type for profile image" });
                 }
