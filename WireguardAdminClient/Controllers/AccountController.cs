@@ -18,6 +18,9 @@ using WireguardAdminClient.Services;
 using Microsoft.AspNetCore.Authentication.Google;
 using System.IO;
 using Microsoft.AspNetCore.Http;
+using System.Net.Http;
+using Newtonsoft.Json;
+
 namespace WireguardAdmin.Controllers
 {
     public class AccountController : Controller
@@ -48,17 +51,34 @@ namespace WireguardAdmin.Controllers
 
                     var response = await wireguardService.LoginUser(loginModel);
 
-                    var token = response.Token;
 
-                    HttpContext.Response.Cookies.Append("access_token", token, new CookieOptions { HttpOnly = true, Secure = true });
+                    using (HttpClient httpClient = new HttpClient())
+                    {
 
-                    return RedirectToPage("/Account/Index");
+                        AuthenticationProperties options = new AuthenticationProperties();
 
+                        options.AllowRefresh = true;
+                        options.IsPersistent = true;
+                        options.ExpiresUtc = response.Expiration;
+                        options.IsPersistent = loginModel.RememberLogin;
+                        options.RedirectUri = loginModel.ReturnUrl;
+
+                        var claims = new[]
+                        {
+                            new Claim(ClaimTypes.Name, loginModel.Username),
+                            new Claim("AcessToken", string.Format("Bearer {0}", response.Token)),
+                        };
+
+                        var claimsIdentity = new ClaimsIdentity(claims, "cookieAuth");
+
+                        await HttpContext.SignInAsync("cookieAuth", new ClaimsPrincipal(claimsIdentity));
+                    }
+                    return RedirectToAction("Index");
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-
                     ModelState.AddModelError("", "Invalid name or password");
+                    Console.WriteLine(e);
                     return View(loginModel);
                 }
             }
@@ -87,6 +107,9 @@ namespace WireguardAdmin.Controllers
 
         public async Task<IActionResult> LogOut()
         {
+            //SignOutAsync is Extension method for SignOut
+            await HttpContext.SignOutAsync("cookieAuth");
+            //Redirect to home page
             return LocalRedirect("/Account/Login");
         }
 
@@ -121,7 +144,7 @@ namespace WireguardAdmin.Controllers
                         //Getting file Extension
                         var fileExtension = Path.GetExtension(fileName);
 
-                        if(fileExtension == ".jpg" || fileExtension == ".png" || fileExtension == ".jpeg")
+                        if (fileExtension == ".jpg" || fileExtension == ".png" || fileExtension == ".jpeg")
                         {
                             // concatenating  FileName + FileExtension
                             var newFileName = String.Concat(Convert.ToString(Guid.NewGuid()), fileExtension);
@@ -146,7 +169,7 @@ namespace WireguardAdmin.Controllers
                             ModelState.AddModelError("", "Invalid file type");
                             return View("Signup");
                         }
-                       
+
 
                     }
                 }
@@ -162,7 +185,7 @@ namespace WireguardAdmin.Controllers
                     ProfileImage = objfiles
                 };
 
-                
+
 
                 var response = await wireguardService.SignupUser(signupModelDto);
 

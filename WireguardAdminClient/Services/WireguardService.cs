@@ -17,7 +17,7 @@ namespace WireguardAdminClient.Services
 
         public WireguardService(IHttpContextAccessor httpContextAccessor)
         {
-            wireguardService = RestService.For<IWireguardService>("https://127.0.0.1:5001", new RefitSettings()
+            wireguardService = RestService.For<IWireguardService>("https://localhost:5001", new RefitSettings()
             {
                 AuthorizationHeaderValueGetter = () =>
                     Task.FromResult(token)

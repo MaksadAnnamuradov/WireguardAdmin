@@ -14,16 +14,28 @@
     <div class="bg-dark text-white p-2">
     </div>
     <div class="m-1 p-1">
+        <h2>Confidential Data</h2>
+
+        @if (User.Identity.IsAuthenticated)
+        {
+            <table class="table table-bordered">
+                @foreach (var claim in User.Claims)
+                {
+                    <tr><td>@claim.Type</td><td>@claim.Value</td></tr>
+                }
+            </table>
+        }
+
         @*if(@Model != null){
             <p>@Model.UserName</p>
-           <p>@Model.Email</p>
-           <p>@Model.BirthDate</p>
-           <p>@Model.ProfileDescription</p>
-           <p>@Model.FavoritePet</p>
-           <p>@Model.UserName</p>
-        }*@
+            <p>@Model.Email</p>
+            <p>@Model.BirthDate</p>
+            <p>@Model.ProfileDescription</p>
+            <p>@Model.FavoritePet</p>
+            <p>@Model.UserName</p>
+            }*@
 
-      
+
     </div>
 </body>
 </html>

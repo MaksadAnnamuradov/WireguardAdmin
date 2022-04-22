@@ -39,42 +39,29 @@ namespace WireguardAdminClient
             services.AddScoped<WireguardService>();
             services.AddControllers();
 
-            services.AddAuthentication(options =>
-            {
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-            })
-            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
-            {
-                int minute = 60;
-                int hour = minute * 60;
-                int day = hour * 24;
-                int week = day * 7;
-                int year = 365 * day;
+            services.AddAuthentication("cookieAuth")
+               .AddCookie(("cookieAuth"), options =>
+               {
+                   options.Cookie.Name = "cookieAuth";
+                   options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+                   options.SlidingExpiration = true;
+                   options.LoginPath = "/Account/Login";
+                   options.AccessDeniedPath = "/Account/AccessDenied";
+               }
+               );
 
-                options.LoginPath = "/account/login";
-                options.AccessDeniedPath = "/auth/accessdenied";
-                options.Cookie.IsEssential = true;
-                options.SlidingExpiration = true;
-                options.ExpireTimeSpan = TimeSpan.FromSeconds(day / 2);
-
-                options.Cookie.Name = "access_token";
-            })
-            .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+            services.AddAuthorization(options =>
             {
-                options.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";
-                options.ClientSecret = "8PRENu0lnO9Ck-7INd81bg3l";
-                options.SignInScheme = IdentityConstants.ExternalScheme;
-                options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+                options.AddPolicy("admin", policy => policy.RequireClaim("admin"));
             });
+            /*  .AddGoogle(GoogleDefaults.AuthenticationScheme, options =>
+              {
+                  options.ClientId = "576944989227-8l94os8k65sltc8fspim0pcaqlt4kcua.apps.googleusercontent.com";
+                  options.ClientSecret = "8PRENu0lnO9Ck-7INd81bg3l";
+                  options.SignInScheme = IdentityConstants.ExternalScheme;
+                  options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+              });*/
 
-            services.AddSession(options =>
-            {
-                options.IdleTimeout = TimeSpan.FromMinutes(2);//You can set Time   
-            });
-
-
-            services.AddScoped<IWireguardService, WireguardService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -95,12 +82,8 @@ namespace WireguardAdminClient
 
             app.UseRouting();
 
-            app.UseSession();
-
             app.UseAuthorization();
             app.UseAuthentication();
-
-            app.UseSession();
 
             var cookiePolicyOptions = new CookiePolicyOptions
             {

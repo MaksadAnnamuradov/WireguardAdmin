@@ -107,45 +107,31 @@ namespace WireguardAdmin.Controllers
 
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                /* var userRoles = await _userManager.GetRolesAsync(user);
+                var userRoles = await _userManager.GetRolesAsync(user);
 
-                 var authClaims = new List<Claim>
+                var authClaims = new List<Claim>
                  {
                      new Claim(ClaimTypes.Name, user.UserName),
                      new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                  };
 
-                 foreach (var userRole in userRoles)
-                 {
-                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                 }
+                foreach (var userRole in userRoles)
+                {
+                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                }
 
-                 var token = GetToken(authClaims);
-
-                 return Ok(new
-                 {
-                     Token = new JwtSecurityTokenHandler().WriteToken(token),
-                     Expiration = token.ValidTo
-                 });*/
-
-                var token = _jwtCreator.Generate(user.Email, user.Id);
+                var token = GetToken(authClaims);
 
                 user.RefreshToken = Guid.NewGuid().ToString();
 
                 await _userManager.UpdateAsync(user);
 
-                /*Response.Cookies.Append("X-Access-Token", token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
-                Response.Cookies.Append("X-Username", user.UserName, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
-                Response.Cookies.Append("X-Refresh-Token", user.RefreshToken, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });*/
-
                 return Ok(new
                 {
-                    Token = token,
-                    Username = user.UserName,
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    Expiration = token.ValidTo,
                     RefreshToken = user.RefreshToken,
-                }
-
-                    );
+                });
 
             }
 
@@ -235,12 +221,12 @@ namespace WireguardAdmin.Controllers
 
         private JwtSecurityToken GetToken(List<Claim> authClaims)
         {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]));
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["JWT:ValidIssuer"],
-                audience: _configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddHours(3),
+                issuer: _configuration["JwtSettings:Issuer"],
+                audience: _configuration["JwtSettings:Audience"],
+                expires: DateTime.Now.AddHours(1),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );

@@ -25,7 +25,6 @@
                 @ViewBag.Message
             </span>
         }
-        @Html.HiddenFor(x => x.ReturnUrl)
 
         <form asp-action="Login" method="post" asp-controller="Account">
            @* <input type="hidden" asp-for="ReturnUrl" />*@
